@@ -213,6 +213,10 @@ function setupEventListeners() {
   confirmDeleteBtn.addEventListener('click', deleteRecording);
   cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
   
+  // Save and cancel recording buttons
+  saveButton.addEventListener('click', saveRecording);
+  cancelButton.addEventListener('click', cancelRecording);
+  
   // Continue recording
   document.getElementById('continueRecordingBtn').addEventListener('click', continueRecording);
   
@@ -330,8 +334,14 @@ async function startRecording() {
         console.log('Starting new recording');
       }
       
+      // Set up the dataavailable event listener only once
+      // The saveRecording function will add a temporary listener when needed
       state.mediaRecorder.addEventListener('dataavailable', event => {
-        state.audioChunks.push(event.data);
+        // Only push data if we're not in the process of saving
+        // This prevents duplicate chunks when the save handler is active
+        if (!state.isSaving) {
+          state.audioChunks.push(event.data);
+        }
       });
     } else if (state.mediaRecorder.state === 'paused') {
       // Resume the existing recording
@@ -428,12 +438,35 @@ async function saveRecording() {
     return saveContinuationRecording();
   }
   
-  // If still recording, stop it first
+  // If still recording, stop it first and wait for data to be available
   if (state.isRecording) {
-    stopRecording();
+    // Show processing indicator immediately to give user feedback
+    actionButtons.classList.add('hidden');
+    processingIndicator.classList.remove('hidden');
+    
+    // Set the isSaving flag to prevent duplicate chunks
+    state.isSaving = true;
+    
+    // Create a promise that resolves when the dataavailable event fires
+    const dataAvailablePromise = new Promise((resolve) => {
+      // Only set up this listener if we're currently recording
+      const dataHandler = (event) => {
+        state.mediaRecorder.removeEventListener('dataavailable', dataHandler);
+        state.audioChunks.push(event.data);
+        resolve();
+      };
+      
+      state.mediaRecorder.addEventListener('dataavailable', dataHandler);
+      stopRecording();
+    });
+    
+    // Wait for the data to be available before proceeding
+    await dataAvailablePromise;
   }
   
   if (state.audioChunks.length === 0) {
+    processingIndicator.classList.add('hidden');
+    showNotification('No audio recorded. Please try again.', 'error');
     return;
   }
   
@@ -483,6 +516,8 @@ async function saveRecording() {
     // Show transcription
     displayTranscription(result);
     
+    // Reset the isSaving flag
+    state.isSaving = false;
   } catch (error) {
     console.error('Error saving recording:', error);
     showNotification('Failed to process recording. Please try again.', 'error');
@@ -495,6 +530,9 @@ async function saveRecording() {
     
     // Reset recording state
     resetRecordingState();
+    
+    // Reset the isSaving flag
+    state.isSaving = false;
   }
 }
 
@@ -513,6 +551,7 @@ function cancelRecording() {
 // Reset recording state
 function resetRecordingState(keepContinuationMode = false) {
   state.isRecording = false;
+  state.isSaving = false;
   state.audioChunks = [];
   state.recordingStartTime = null;
   state.recordingElapsedTime = 0;
@@ -698,6 +737,9 @@ function renderRecordingsList() {
           <button class="edit-title-btn" data-id="${recording.id}">
             <i class="fas fa-edit"></i>
           </button>
+          <button class="quick-delete-btn" data-id="${recording.id}">
+            <i class="fas fa-times"></i>
+          </button>
         </div>
         <div class="history-meta">
           <span>${formattedDate}, ${formattedTime}</span>
@@ -761,6 +803,15 @@ function renderRecordingsList() {
           titleElement.blur();
         }
       });
+    });
+  });
+  
+  // Add quick delete button listeners
+  document.querySelectorAll('.quick-delete-btn').forEach(btn => {
+    const recordingId = btn.getAttribute('data-id');
+    btn.addEventListener('click', function(e) {
+      e.stopPropagation(); // Prevent triggering the parent click
+      quickDeleteRecording(recordingId);
     });
   });
 }
@@ -1746,12 +1797,47 @@ function setContinuationLanguage(language) {
 
 // Save continuation recording
 async function saveContinuationRecording() {
-  // If still recording, stop it first
+  // If still recording, stop it first and wait for data to be available
   if (state.isRecording) {
-    stopRecording();
+    // Show processing indicator immediately to give user feedback
+    const continuationActionButtons = document.getElementById('continuationActionButtons');
+    if (continuationActionButtons) {
+      continuationActionButtons.classList.add('hidden');
+    }
+    
+    const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
+    if (continuationProcessingIndicator) {
+      continuationProcessingIndicator.classList.remove('hidden');
+      continuationProcessingIndicator.style.display = 'flex'; // Ensure it's visible
+    }
+    
+    // Set the isSaving flag to prevent duplicate chunks
+    state.isSaving = true;
+    
+    // Create a promise that resolves when the dataavailable event fires
+    const dataAvailablePromise = new Promise((resolve) => {
+      // Only set up this listener if we're currently recording
+      const dataHandler = (event) => {
+        state.mediaRecorder.removeEventListener('dataavailable', dataHandler);
+        state.audioChunks.push(event.data);
+        resolve();
+      };
+      
+      state.mediaRecorder.addEventListener('dataavailable', dataHandler);
+      stopRecording();
+    });
+    
+    // Wait for the data to be available before proceeding
+    await dataAvailablePromise;
   }
   
   if (state.audioChunks.length === 0) {
+    const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
+    if (continuationProcessingIndicator) {
+      continuationProcessingIndicator.classList.add('hidden');
+      continuationProcessingIndicator.style.display = 'none';
+    }
+    showNotification('No audio recorded. Please try again.', 'error');
     return;
   }
   
@@ -1832,6 +1918,9 @@ async function saveContinuationRecording() {
       // Reset recording state
       resetRecordingState();
       
+      // Reset the isSaving flag
+      state.isSaving = false;
+      
       // Refresh recordings list to update UI
       await fetchRecordings();
     } else {
@@ -1840,6 +1929,9 @@ async function saveContinuationRecording() {
       
       // Reset recording state
       resetRecordingState();
+      
+      // Reset the isSaving flag
+      state.isSaving = false;
     }
   } catch (error) {
     console.error('Error saving continuation recording:', error);
@@ -1856,6 +1948,9 @@ async function saveContinuationRecording() {
     
     // Reset recording state
     resetRecordingState();
+    
+    // Reset the isSaving flag
+    state.isSaving = false;
   }
 }
 
@@ -1978,6 +2073,46 @@ async function deleteRecording() {
     console.error('Error deleting recording:', error);
     showNotification(`Failed to delete recording: ${error.message}`, 'error');
     hideDeleteConfirmation();
+  }
+}
+
+// Quick delete recording from sidebar
+async function quickDeleteRecording(recordingId) {
+  if (!recordingId) {
+    showNotification('Invalid recording ID', 'error');
+    return;
+  }
+  
+  try {
+    // Send delete request to server
+    const response = await fetch(`${API_URL}/recording/${recordingId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Server error: ${response.status} ${response.statusText}`);
+    }
+    
+    // Remove from state
+    state.recordings = state.recordings.filter(r => r.id !== recordingId);
+    
+    // Show subtle success notification
+    showNotification('Recording deleted', 'success', 'subtle');
+    
+    // If the deleted recording is the current one being viewed, go back to recorder view
+    if (state.currentRecordingId === recordingId) {
+      transcriptionContainer.classList.add('hidden');
+      recorderContainer.classList.remove('hidden');
+      state.currentRecordingId = null;
+    }
+    
+    // Update UI
+    renderRecordingsList();
+    renderCalendar();
+    
+  } catch (error) {
+    console.error('Error deleting recording:', error);
+    showNotification(`Failed to delete recording: ${error.message}`, 'error');
   }
 }
 

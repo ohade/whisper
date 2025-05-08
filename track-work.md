@@ -5,6 +5,10 @@
 - [x] Fix day summary popup being cut off in the calendar view. Created: 2025-05-08. Completed: 2025-05-08 23:02:56
   - [x] Fixed calendar width to ensure all dates are visible. Created: 2025-05-08. Completed: 2025-05-08 23:02:56
   - [x] Fixed popup menu to appear when clicking on dates with records. Created: 2025-05-08. Completed: 2025-05-08 23:02:56
+- [x] Fixed save button requiring two clicks to send recording for transcription. Created: 2025-05-09. Completed: 2025-05-09 01:34:15
+  - [x] Fixed main recording component save button functionality. Created: 2025-05-09. Completed: 2025-05-09 01:34:15
+  - [x] Fixed continuation recording component save button functionality. Created: 2025-05-09. Completed: 2025-05-09 01:34:15
+  - [x] Added proper handling of MediaRecorder's asynchronous behavior. Created: 2025-05-09. Completed: 2025-05-09 01:34:15
 
 ## Known Issues
 - [ ] Recording functionality has remaining issues to be addressed. Created: 2025-05-08
@@ -136,6 +140,29 @@
   - [x] Test popup menu closes when clicking day without recording. Created: 2025-05-08. Completed: 2025-05-08
 
 ## Work Log
+
+### Save Button Fix - 2025-05-09
+**Accomplishments:**
+- Fixed the issue where save buttons required two clicks to send recordings for transcription
+- Implemented proper handling of MediaRecorder's asynchronous behavior in both main and continuation recording components
+- Added immediate UI feedback when saving recordings
+- Improved error handling for cases with no recorded audio
+- Ensured consistent state management across recording components
+
+**Challenges:**
+- MediaRecorder's asynchronous nature meant that stopping recording and getting the audio data are separate events
+- The original implementation didn't account for the delay between stopping recording and data becoming available
+- Needed to ensure proper state management to prevent duplicate audio chunks
+- Had to maintain backward compatibility with existing functionality
+
+**Implemented Solutions:**
+- Created a Promise-based approach to wait for the 'dataavailable' event after stopping recording
+- Added an isSaving flag to prevent duplicate audio chunks from being processed
+- Modified event listeners to properly handle the asynchronous flow
+- Added proper error handling and UI feedback throughout the save process
+- Ensured the isSaving flag is reset in all code paths (success, error, and early returns)
+
+**Completed: 2025-05-09 01:34:15**
 
 ### Continue Recording Component Refactoring - 2025-05-09
 **Accomplishments:**
