@@ -1003,6 +1003,8 @@ function handleCalendarDayClick(e) {
   e.preventDefault();
   e.stopPropagation();
   
+  console.log('Calendar day click event triggered', e.target);
+  
   // Get the calendar day element (could be the day itself or a child element like the red dot)
   let dayElement = e.target;
   
@@ -1025,26 +1027,33 @@ function handleCalendarDayClick(e) {
   
   console.log('Calendar day clicked:', dateString, 'Has recordings:', hasRecordings);
   
+  // Get the popup element
+  const dayRecordingsPopup = document.getElementById('dayRecordingsPopup');
+  if (!dayRecordingsPopup) {
+    console.error('Day recordings popup element not found');
+    return false;
+  }
+  
   // If popup is visible and clicking on the same day, hide it
   if (!dayRecordingsPopup.classList.contains('hidden') && 
       dayRecordingsPopup.getAttribute('data-current-date') === dateString) {
     console.log('Hiding popup for same day');
     dayRecordingsPopup.classList.add('hidden');
+    dayRecordingsPopup.style.display = 'none';
+    return false; // Exit early after hiding the popup
   }
-  // If clicking on a day with recordings, show the popup
-  else if (hasRecordings) {
+  // Always hide the current popup first, regardless of what we're going to do next
+  dayRecordingsPopup.classList.add('hidden');
+  
+  // If clicking on a day with recordings, show the popup with new content
+  if (hasRecordings) {
     console.log('Showing popup for day with recordings');
-    // Hide popup first to ensure it's properly refreshed
-    dayRecordingsPopup.classList.add('hidden');
-    // Use setTimeout to ensure the DOM updates before showing the popup again
-    setTimeout(() => {
-      showDayRecordings(dateString, e);
-    }, 10);
-  }
-  // If clicking on a day without recordings, hide any visible popup
-  else {
-    console.log('Hiding popup for day without recordings');
-    dayRecordingsPopup.classList.add('hidden');
+    // Show the popup immediately with the new date's recordings
+    showDayRecordings(dateString, e);
+  } else {
+    console.log('No recordings for this day, keeping popup hidden');
+    // Ensure the popup stays hidden
+    dayRecordingsPopup.style.display = 'none';
   }
   
   return false;
@@ -1130,24 +1139,25 @@ function showDayRecordings(dateString, event) {
   dayRecordingsPopup.innerHTML = html;
   
   // Add click event listeners to recording items
-  setTimeout(() => {
-    const recordingItems = dayRecordingsPopup.querySelectorAll('.day-recording-item');
-    recordingItems.forEach(item => {
-      item.addEventListener('click', () => {
-        const recordingId = item.getAttribute('data-id');
-        if (recordingId) {
-          fetchRecordingDetails(recordingId);
-          dayRecordingsPopup.classList.add('hidden');
-        }
-      });
+  const recordingItems = dayRecordingsPopup.querySelectorAll('.day-recording-item');
+  recordingItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const recordingId = item.getAttribute('data-id');
+      if (recordingId) {
+        fetchRecordingDetails(recordingId);
+        dayRecordingsPopup.classList.add('hidden');
+      }
     });
-  }, 0);
+  });
   
   // Store current date for reference
   dayRecordingsPopup.setAttribute('data-current-date', dateString);
   
   // Make popup visible
   dayRecordingsPopup.classList.remove('hidden');
+  
+  // Force browser to recognize the popup is visible
+  dayRecordingsPopup.style.display = 'block';
   
   // Add event listener to close popup when clicking outside
   document.addEventListener('click', closePopupOnClickOutside);

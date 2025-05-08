@@ -809,7 +809,7 @@ body {
 }
 
 .day-recordings-popup {
-    position: absolute;
+    position: fixed;
     z-index: 1001;
     background-color: white;
     border-radius: var(--border-radius);
@@ -822,8 +822,8 @@ body {
     display: block;
     border: 1px solid #e1e4e8;
     pointer-events: auto;
-    top: 50px; /* Position below the calendar header */
-    left: 20px; /* Position from the left edge of the calendar */
+    top: 100px; /* Position below the calendar header */
+    right: 360px; /* Position it right at the edge of the calendar */
     word-wrap: break-word;
     white-space: normal;
     transform: none; /* Ensure no transforms affect positioning */
