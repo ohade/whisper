@@ -21,6 +21,7 @@
 [2025-05-08 22:56:18] - Identified remaining issues with recording functionality that need to be addressed
 [2025-05-08 22:57:42] - Added detailed subtasks for recording functionality issues including audio processing, memory leaks, and test requirements
 [2025-05-08 23:02:56] - Fixed calendar issues: ensured all dates are visible and fixed popup menu appearance when clicking on dates with records
+[2025-05-08 23:42:41] - Improved continue recording system with language selection and fixed issue where it creates new records instead of appending
 
 Completed tasks from track-work.md:
 - Implemented mocking approach to avoid microphone permission issues

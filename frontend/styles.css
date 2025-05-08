@@ -590,6 +590,171 @@ body {
     border-left: 4px solid var(--accent-color);
     transition: var(--transition);
     animation: slide-in 0.5s ease-out;
+    border: 1px solid var(--border-color);
+}
+
+.continuation-container h3 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+/* Language selector styles - match original */
+.continuation-container .language-selector {
+    margin-bottom: 30px;
+    text-align: left;
+}
+
+.continuation-container .language-selector label {
+    display: block;
+    margin-bottom: 10px;
+    font-weight: 600;
+    color: var(--dark-color);
+}
+
+.continuation-container .language-buttons {
+    display: flex;
+    justify-content: flex-start;
+    margin-bottom: 15px;
+    gap: 15px;
+}
+
+.continuation-container .language-btn {
+    padding: 10px 20px;
+    border: 2px solid var(--primary-color);
+    background-color: white;
+    color: var(--primary-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    min-width: 80px;
+    height: 40px;
+    font-size: 16px;
+}
+
+.continuation-container .language-btn.active {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.continuation-container .language-btn:hover:not(.active) {
+    background-color: #e9ecef;
+}
+
+/* Recorder controls - match original */
+.continuation-container .recorder-controls {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+    margin-bottom: 30px;
+    justify-content: flex-start;
+}
+
+.continuation-container .record-button {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: var(--light-color);
+    border: 2px solid var(--danger-color); /* Use danger color (red) for consistency */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.continuation-container .record-button i {
+    font-size: 2rem;
+    color: var(--danger-color); /* Use danger color (red) for consistency */
+}
+
+.continuation-container .record-button.recording {
+    background-color: var(--danger-color); /* Use danger color (red) for consistency */
+    animation: pulse 1.5s infinite;
+}
+
+.continuation-container .record-button.recording i {
+    color: white;
+}
+
+.continuation-container .recording-status {
+    flex-grow: 1;
+}
+
+.continuation-container .status-text {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.continuation-container .timer {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Action buttons - match original */
+.continuation-container .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 30px;
+    margin-bottom: 20px;
+}
+
+.continuation-container .action-btn {
+    padding: 12px 25px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.continuation-container .action-btn i {
+    margin-right: 5px;
+}
+
+.continuation-container .save-btn {
+    background-color: var(--success-color);
+    color: white;
+}
+
+.continuation-container .save-btn:hover {
+    background-color: #218838; /* Exact same color as original save button */
+}
+
+.continuation-container .cancel-btn {
+    background-color: var(--danger-color);
+    color: white;
+}
+
+.continuation-container .cancel-btn:hover {
+    background-color: #c82333; /* Exact same color as original cancel button */
+}
+
+/* Processing indicator styles */
+
+/* Processing indicator - match original */
+.continuation-container .processing-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.continuation-container .spinner {
+    width: 40px;
+    height: 40px;
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    border-top-color: var(--primary-color);
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
 }
 
 @keyframes slide-in {

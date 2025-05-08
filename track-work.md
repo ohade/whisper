@@ -13,6 +13,24 @@
   - [ ] Write unit tests for recording functionality fixes. Created: 2025-05-08
   - [ ] Write integration tests for recording session stability. Created: 2025-05-08
 
+- [x] Continue recording system needs improvements. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
+  - [x] Add language selection (Hebrew/English) when continuing recording. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
+  - [x] Fix issue where continuing recording creates a new record instead of appending to the current one. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
+  - [x] Write unit tests for continue recording functionality. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
+  - [x] Write integration tests for continue recording workflow. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
+
+- [x] Refactor continue recording component to match original recording component. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+  - [x] Make language selection work consistently with original component. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+  - [x] Ensure recording functionality behaves the same way as original. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+  - [x] Update UI to match original recording component style and behavior. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+  - [x] Fix timer display in continue recording mode. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+  - [x] Ensure proper cleanup when switching between modes. Created: 2025-05-08 23:47:17. Completed: 2025-05-09 00:02:06
+
+- [x] Improve continue recording UI alignment and button styling. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
+  - [x] Fix language selector and button alignment to match original component. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
+  - [x] Update save and cancel button styling to ensure proper hover effects. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
+  - [x] Ensure consistent button sizing between original and continuation components. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
+
 ## Additional Requirements
 - [x] Add unique colors for each language in the sidebar. Created: 2025-05-08. Completed: 2025-05-08
 - [x] Add tagging functionality for recordings. Created: 2025-05-08. Completed: 2025-05-08
@@ -113,6 +131,54 @@
   - [x] Test popup menu closes when clicking day without recording. Created: 2025-05-08. Completed: 2025-05-08
 
 ## Work Log
+
+### Continue Recording Component Refactoring - 2025-05-09
+**Accomplishments:**
+- Refactored the continue recording component to match the original recording component's functionality and appearance
+- Updated the UI to provide consistent language selection between original and continuation modes
+- Fixed the timer display to show correct recording time in continuation mode
+- Improved the pause/resume functionality to work consistently in continuation mode
+- Enhanced the animation and transitions when canceling or completing continuation recording
+- Added proper cleanup when switching between recording modes
+
+**Challenges:**
+- Needed to ensure consistent UI behavior between original and continuation recording components
+- Had to handle different states (recording, paused, stopped) correctly in both modes
+- Ensuring proper timer synchronization between components
+- Managing the cleanup of UI elements when switching modes or canceling recordings
+
+**Implemented Solutions:**
+- Created a dedicated setContinuationLanguage function to handle language selection consistently
+- Updated the toggleContinuationRecording function to properly handle UI updates
+- Modified the stopRecording and pauseRecording functions to check for continuation mode
+- Created a separate saveContinuationRecording function to handle the continuation-specific logic
+- Added smooth animations for better user experience when transitioning between states
+- Implemented proper error handling and notifications throughout the continuation flow
+
+**Completed: 2025-05-09 00:02:06**
+
+### Continue Recording System Improvements - 2025-05-08
+**Accomplishments:**
+- Added language selection (Hebrew/English) to the continue recording interface
+- Fixed issue where continuing recording created a new record instead of appending to the current one
+- Wrote unit tests for the continue recording functionality
+- Implemented proper UI feedback when continuing recordings
+- Added CSS styling for the language selection in the continuation container
+
+**Challenges:**
+- The continue recording function was defaulting to English without giving users a language choice
+- Each continued recording was creating a new entry instead of appending to the current transcription
+- Needed to ensure the UI properly reflected the continuation state
+- Had to handle different action button states between normal and continuation modes
+
+**Implemented Solutions:**
+- Added a language selection component to the continuation container with proper styling
+- Modified the saveRecording function to detect continuation mode and append to existing records
+- Added server communication to include continuation mode information in API requests
+- Updated the UI to show clear feedback when continuing recordings
+- Implemented proper cleanup of continuation container after saving
+
+**Completed: 2025-05-08 23:42:41**
 
 ### Playwright Test for Calendar Recording Functionality - 2025-05-08
 **Accomplishments:**

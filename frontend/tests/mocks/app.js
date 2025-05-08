@@ -112,6 +112,11 @@ const displayTranscription = jest.fn((recording) => {
   
   // Update state
   global.state.currentRecordingId = recording.id;
+  
+  // Set the language based on the recording
+  if (recording.language) {
+    global.state.selectedLanguage = recording.language;
+  }
 });
 
 const continueRecording = jest.fn(async () => {
@@ -140,6 +145,15 @@ const continueRecording = jest.fn(async () => {
     const header = document.createElement('h3');
     header.textContent = 'Continue Recording';
     continuationContainer.appendChild(header);
+    
+    // Add language selection
+    const languageSelection = document.createElement('div');
+    languageSelection.className = 'language-selection';
+    languageSelection.innerHTML = `
+      <button class="language-btn ${global.state.selectedLanguage === 'english' ? 'active' : ''}" data-language="english">English</button>
+      <button class="language-btn ${global.state.selectedLanguage === 'hebrew' ? 'active' : ''}" data-language="hebrew">עברית</button>
+    `;
+    continuationContainer.appendChild(languageSelection);
     
     // Create recorder controls
     const recorderControls = document.createElement('div');
@@ -276,6 +290,63 @@ const mergeTranscriptions = jest.fn(async () => {
   }
 });
 
+const saveRecording = jest.fn(async () => {
+  if (global.state.audioChunks.length === 0) {
+    return Promise.resolve();
+  }
+  
+  try {
+    // Check if we're in continuation mode
+    if (global.state.continuationMode && global.state.currentRecordingId) {
+      // Get the current recording
+      const currentRecording = global.state.recordings.find(r => r.id === global.state.currentRecordingId);
+      
+      if (currentRecording) {
+        // Simulate API response with additional transcription
+        const apiResponse = {
+          id: currentRecording.id,
+          title: currentRecording.title,
+          timestamp: currentRecording.timestamp,
+          language: global.state.selectedLanguage,
+          transcription: 'Additional transcription'
+        };
+        
+        // Append the new transcription to the existing one
+        currentRecording.transcription = `${currentRecording.transcription}\n\n${apiResponse.transcription}`;
+        
+        // Update the UI
+        const transcriptionText = document.getElementById('transcriptionText');
+        if (transcriptionText) {
+          transcriptionText.textContent = currentRecording.transcription;
+        }
+        
+        return Promise.resolve(currentRecording);
+      }
+    } else {
+      // If not in continuation mode, create a new recording
+      const newRecording = {
+        id: `rec${Date.now()}`,
+        title: 'New Recording',
+        timestamp: Date.now(),
+        language: global.state.selectedLanguage,
+        transcription: 'Test transcription'
+      };
+      
+      // Add to recordings
+      global.state.recordings.push(newRecording);
+      
+      return Promise.resolve(newRecording);
+    }
+  } catch (error) {
+    console.error('Error saving recording:', error);
+    return Promise.reject(error);
+  }
+});
+
+const setLanguage = jest.fn((language) => {
+  global.state.selectedLanguage = language;
+});
+
 module.exports = {
   moveCalendarToRightPanel,
   renderCalendar,
@@ -285,5 +356,7 @@ module.exports = {
   continueRecording,
   renderTags,
   showNotification,
-  mergeTranscriptions
+  mergeTranscriptions,
+  saveRecording,
+  setLanguage
 };

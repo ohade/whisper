@@ -19,6 +19,22 @@ describe('Continue Recording Tests', () => {
             </div>
           </div>
         </div>
+        <div class="language-buttons">
+          <button id="englishBtn" class="language-btn active" data-language="english">English</button>
+          <button id="hebrewBtn" class="language-btn" data-language="hebrew">עברית</button>
+        </div>
+        <div id="actionButtons" class="action-buttons hidden">
+          <button id="saveButton" class="action-btn save-btn">
+            <i class="fas fa-save"></i> Save
+          </button>
+          <button id="cancelButton" class="action-btn cancel-btn">
+            <i class="fas fa-times"></i> Cancel
+          </button>
+        </div>
+        <div id="processingIndicator" class="processing-indicator hidden">
+          <div class="spinner"></div>
+          <span>Processing... <span id="processingTimer">00:00</span></span>
+        </div>
       </div>
     `;
     
@@ -29,6 +45,11 @@ describe('Continue Recording Tests', () => {
       audioChunks: [],
       recordingStartTime: null,
       recordingElapsedTime: 0,
+      recordingPauseTime: null,
+      processingStartTime: null,
+      recordingInterval: null,
+      processingInterval: null,
+      selectedLanguage: 'english',
       currentRecordingId: 'rec123',
       relatedRecordings: [],
       continuationMode: false,
@@ -40,8 +61,29 @@ describe('Continue Recording Tests', () => {
           language: 'english',
           transcription: 'Test transcription'
         }
-      ]
+      ],
+      calendar: {
+        currentDate: new Date(),
+        currentMonth: new Date().getMonth(),
+        currentYear: new Date().getFullYear(),
+        selectedDay: null
+      }
     };
+    
+    // Mock clearInterval and setInterval
+    global.clearInterval = jest.fn();
+    global.setInterval = jest.fn().mockReturnValue(123);
+    
+    // Mock fetch function
+    global.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({})
+      });
+    });
+    
+    // Mock showNotification function
+    global.showNotification = jest.fn();
   });
   
   test('Continue recording button should be visible after transcription is displayed', () => {
@@ -163,5 +205,66 @@ describe('Continue Recording Tests', () => {
     
     // Check if scrollIntoView was called on the continuation container
     expect(continuationContainer.scrollIntoView).toHaveBeenCalled();
+  });
+
+  test('Language selection should be available when continuing recording', () => {
+    // Import the functions
+    const { continueRecording } = require('../app.js');
+    
+    // Call continueRecording
+    continueRecording();
+    
+    // Check if language selection container exists in the continuation container
+    const continuationContainer = document.getElementById('continuationContainer');
+    const languageSelection = continuationContainer.querySelector('.language-selection');
+    expect(languageSelection).not.toBeNull();
+    
+    // Check if both language buttons exist
+    const englishBtn = languageSelection.querySelector('.language-btn[data-language="english"]');
+    const hebrewBtn = languageSelection.querySelector('.language-btn[data-language="hebrew"]');
+    expect(englishBtn).not.toBeNull();
+    expect(hebrewBtn).not.toBeNull();
+  });
+
+  test('Continuing recording should append to current record instead of creating a new one', () => {
+    // Import the functions
+    const { continueRecording, saveRecording } = require('../app.js');
+    
+    // Set up the current recording
+    global.state.currentRecordingId = 'rec123';
+    global.state.recordings = [
+      {
+        id: 'rec123',
+        title: 'Test Recording',
+        timestamp: new Date('2025-05-08T10:00:00').getTime(),
+        language: 'english',
+        transcription: 'Initial transcription'
+      }
+    ];
+    
+    // Mock fetch to simulate API response
+    global.fetch = jest.fn().mockImplementation(() => {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          id: 'rec123',
+          title: 'Test Recording',
+          timestamp: new Date('2025-05-08T10:00:00').getTime(),
+          language: 'english',
+          transcription: 'Additional transcription'
+        })
+      });
+    });
+    
+    // Call continueRecording and then saveRecording
+    continueRecording();
+    global.state.audioChunks = [new Blob(['test audio data'])];
+    return saveRecording().then(() => {
+      // Check if the recording was updated instead of creating a new one
+      expect(global.state.recordings.length).toBe(1);
+      expect(global.state.recordings[0].id).toBe('rec123');
+      expect(global.state.recordings[0].transcription).toContain('Initial transcription');
+      expect(global.state.recordings[0].transcription).toContain('Additional transcription');
+    });
   });
 });

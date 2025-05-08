@@ -191,10 +191,6 @@ function pauseRecording() {
     state.mediaRecorder.pause();
     state.isRecording = false;
     
-    // Update UI
-    recordButton.classList.remove('recording');
-    recordingStatus.querySelector('.status-text').textContent = 'Recording paused';
-    
     // Store the time when recording was paused
     state.recordingPauseTime = Date.now();
     
@@ -205,6 +201,28 @@ function pauseRecording() {
     
     // Clear timer
     clearInterval(state.recordingInterval);
+    
+    // Check if we're in continuation mode
+    if (state.continuationMode) {
+      // Update UI for continuation mode
+      const continuationRecordButton = document.getElementById('continuationRecordButton');
+      const continuationStatus = document.getElementById('continuationRecordingStatus');
+      
+      if (continuationRecordButton) {
+        continuationRecordButton.classList.remove('recording');
+      }
+      
+      if (continuationStatus) {
+        const statusText = continuationStatus.querySelector('.status-text');
+        if (statusText) {
+          statusText.textContent = 'Recording paused';
+        }
+      }
+    } else {
+      // Update UI for normal mode
+      recordButton.classList.remove('recording');
+      recordingStatus.querySelector('.status-text').textContent = 'Recording paused';
+    }
   }
 }
 
@@ -217,13 +235,8 @@ async function startRecording() {
     if (!state.mediaRecorder || state.mediaRecorder.state === 'inactive') {
       state.mediaRecorder = new MediaRecorder(stream);
       
-      // Check if we're in continuation mode
-      const isContinuationMode = state.continuationMode;
-      const continuationActionButtons = document.getElementById('continuationActionButtons');
-      
-      // Only clear chunks if we're starting a new recording (not in continuation mode)
-      if (!isContinuationMode && !actionButtons.classList.contains('hidden')) {
-        // If action buttons are visible, we're in the middle of a recording session
+      // Only clear chunks if we're starting a new recording (not continuing an existing one)
+      if (state.audioChunks.length > 0) {
         console.log('Continuing with existing recording');
       } else {
         // New recording session
@@ -241,7 +254,7 @@ async function startRecording() {
     }
     
     if (state.mediaRecorder.state !== 'recording') {
-      state.mediaRecorder.start();
+      state.mediaRecorder.start(1000); // Collect data every second for better reliability
     }
     
     state.isRecording = true;
@@ -249,31 +262,31 @@ async function startRecording() {
     // Set the new recording start time
     state.recordingStartTime = Date.now();
     
-    // Update UI
-    recordButton.classList.add('recording');
-    recordingStatus.querySelector('.status-text').textContent = 'Recording...';
-    
     // Check if we're in continuation mode
     if (state.continuationMode) {
-      // Show continuation action buttons
+      // Update UI for continuation mode
+      const continuationRecordButton = document.getElementById('continuationRecordButton');
+      const continuationStatus = document.getElementById('continuationRecordingStatus');
       const continuationActionButtons = document.getElementById('continuationActionButtons');
+      
+      if (continuationRecordButton) {
+        continuationRecordButton.classList.add('recording');
+      }
+      
+      if (continuationStatus) {
+        const statusText = continuationStatus.querySelector('.status-text');
+        if (statusText) {
+          statusText.textContent = 'Recording...';
+        }
+      }
+      
       if (continuationActionButtons) {
         continuationActionButtons.classList.remove('hidden');
       }
-      
-      // Update the continuation record button
-      const continuationRecordBtn = document.querySelector('.continuation-record-btn');
-      if (continuationRecordBtn) {
-        continuationRecordBtn.classList.add('recording');
-      }
-      
-      // Update the continuation status text
-      const statusText = document.querySelector('.continuation-container .status-text');
-      if (statusText) {
-        statusText.textContent = 'Recording...';
-      }
     } else {
-      // Show regular action buttons
+      // Update UI for normal mode
+      recordButton.classList.add('recording');
+      recordingStatus.querySelector('.status-text').textContent = 'Recording...';
       actionButtons.classList.remove('hidden');
     }
     
@@ -295,17 +308,40 @@ function stopRecording() {
     // Stop all tracks in the stream
     state.mediaRecorder.stream.getTracks().forEach(track => track.stop());
     
-    // Update UI
-    recordButton.classList.remove('recording');
-    recordingStatus.querySelector('.status-text').textContent = 'Recording stopped';
-    
     // Clear timer
     clearInterval(state.recordingInterval);
+    
+    // Check if we're in continuation mode
+    if (state.continuationMode) {
+      // Update UI for continuation mode
+      const continuationRecordButton = document.getElementById('continuationRecordButton');
+      const continuationStatus = document.getElementById('continuationRecordingStatus');
+      
+      if (continuationRecordButton) {
+        continuationRecordButton.classList.remove('recording');
+      }
+      
+      if (continuationStatus) {
+        const statusText = continuationStatus.querySelector('.status-text');
+        if (statusText) {
+          statusText.textContent = 'Recording stopped';
+        }
+      }
+    } else {
+      // Update UI for normal mode
+      recordButton.classList.remove('recording');
+      recordingStatus.querySelector('.status-text').textContent = 'Recording stopped';
+    }
   }
 }
 
 // Save recording
 async function saveRecording() {
+  // If in continuation mode, delegate to saveContinuationRecording
+  if (state.continuationMode) {
+    return saveContinuationRecording();
+  }
+  
   // If still recording, stop it first
   if (state.isRecording) {
     stopRecording();
@@ -389,43 +425,76 @@ function cancelRecording() {
 }
 
 // Reset recording state
-function resetRecordingState() {
+function resetRecordingState(keepContinuationMode = false) {
   state.isRecording = false;
   state.audioChunks = [];
   state.recordingStartTime = null;
   state.recordingElapsedTime = 0;
   state.recordingPauseTime = null;
   
+  // Clear timer interval
+  if (state.recordingInterval) {
+    clearInterval(state.recordingInterval);
+    state.recordingInterval = null;
+  }
+  
   // Update UI
   recordButton.classList.remove('recording');
   recordingStatus.querySelector('.status-text').textContent = 'Ready to record';
   recordingTimer.textContent = '00:00';
+  
+  // Update continuation UI if in continuation mode
+  if (state.continuationMode) {
+    const continuationRecordButton = document.getElementById('continuationRecordButton');
+    const continuationStatus = document.getElementById('continuationRecordingStatus');
+    const continuationTimer = document.getElementById('continuationTimer');
+    
+    if (continuationRecordButton) {
+      continuationRecordButton.classList.remove('recording');
+    }
+    
+    if (continuationStatus) {
+      const statusText = continuationStatus.querySelector('.status-text');
+      if (statusText) {
+        statusText.textContent = 'Ready to continue';
+      }
+    }
+    
+    if (continuationTimer) {
+      continuationTimer.textContent = '00:00';
+    }
+  }
+  
+  // Reset continuation mode if not explicitly keeping it
+  if (!keepContinuationMode) {
+    state.continuationMode = false;
+  }
 }
 
 // Update recording timer
 function updateRecordingTimer() {
-  if (!state.recordingStartTime && state.recordingElapsedTime === 0) return;
+  if (!state.recordingStartTime) return;
   
-  // Calculate total elapsed time in milliseconds
-  let totalElapsedMs = state.recordingElapsedTime;
+  const now = Date.now();
+  const elapsed = now - state.recordingStartTime + state.recordingElapsedTime;
   
-  // Add current session time if recording is active
-  if (state.isRecording && state.recordingStartTime) {
-    totalElapsedMs += (Date.now() - state.recordingStartTime);
+  // Format time
+  const seconds = Math.floor((elapsed / 1000) % 60);
+  const minutes = Math.floor((elapsed / (1000 * 60)) % 60);
+  const hours = Math.floor(elapsed / (1000 * 60 * 60));
+  
+  let timeString = '';
+  
+  if (hours > 0) {
+    timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  } else {
+    timeString = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   }
   
-  // Convert to seconds
-  const totalElapsedSeconds = Math.floor(totalElapsedMs / 1000);
-  const minutes = Math.floor(totalElapsedSeconds / 60).toString().padStart(2, '0');
-  const seconds = (totalElapsedSeconds % 60).toString().padStart(2, '0');
-  
-  // Format the time string
-  const timeString = `${minutes}:${seconds}`;
-  
-  // Update the main recording timer
+  // Update timer display
   recordingTimer.textContent = timeString;
   
-  // If in continuation mode, also update the continuation timer
+  // If we're in continuation mode, also update the continuation timer
   if (state.continuationMode) {
     const continuationTimer = document.getElementById('continuationTimer');
     if (continuationTimer) {
@@ -1213,30 +1282,38 @@ async function continueRecording() {
       header.textContent = 'Continue Recording';
       continuationContainer.appendChild(header);
       
+      // Add language selector (similar to original)
+      const languageSelector = document.createElement('div');
+      languageSelector.className = 'language-selector';
+      
+      const languageLabel = document.createElement('label');
+      languageLabel.textContent = 'Select Language:';
+      languageSelector.appendChild(languageLabel);
+      
+      const languageButtons = document.createElement('div');
+      languageButtons.className = 'language-buttons';
+      languageButtons.innerHTML = `
+        <button id="continuationEnglishBtn" class="language-btn ${state.selectedLanguage === 'english' ? 'active' : ''}" data-language="english">English</button>
+        <button id="continuationHebrewBtn" class="language-btn ${state.selectedLanguage === 'hebrew' ? 'active' : ''}" data-language="hebrew">עברית</button>
+      `;
+      languageSelector.appendChild(languageButtons);
+      continuationContainer.appendChild(languageSelector);
+      
       // Create recorder controls
       const recorderControls = document.createElement('div');
       recorderControls.className = 'recorder-controls';
       
       // Create record button
       const recordBtn = document.createElement('div');
-      recordBtn.className = 'record-button continuation-record-btn';
+      recordBtn.className = 'record-button';
+      recordBtn.id = 'continuationRecordButton';
       recordBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-      recordBtn.addEventListener('click', () => {
-        // Directly start recording when clicked
-        if (!state.isRecording) {
-          startRecording();
-        } else {
-          pauseRecording();
-        }
-        
-        // Show action buttons when recording starts
-        document.getElementById('continuationActionButtons').classList.remove('hidden');
-      });
       recorderControls.appendChild(recordBtn);
       
       // Create status display
       const statusDisplay = document.createElement('div');
       statusDisplay.className = 'recording-status';
+      statusDisplay.id = 'continuationRecordingStatus';
       statusDisplay.innerHTML = `
         <span class="status-text">Ready to continue</span>
         <span class="timer" id="continuationTimer">00:00</span>
@@ -1247,42 +1324,67 @@ async function continueRecording() {
       
       // Create action buttons
       const actionBtns = document.createElement('div');
-      actionBtns.className = 'action-buttons hidden';
+      actionBtns.className = 'action-buttons hidden'; // Start hidden
       actionBtns.id = 'continuationActionButtons';
-      actionBtns.innerHTML = `
-        <button id="continuationSaveBtn" class="action-btn save-btn">
-          <i class="fas fa-save"></i> Save
-        </button>
-        <button id="continuationCancelBtn" class="action-btn cancel-btn">
-          <i class="fas fa-times"></i> Cancel
-        </button>
-      `;
+      
+      // Create save button as a separate element
+      const saveBtn = document.createElement('button');
+      saveBtn.id = 'continuationSaveButton';
+      saveBtn.className = 'action-btn save-btn';
+      saveBtn.innerHTML = '<i class="fas fa-save"></i> Save';
+      
+      // Create cancel button as a separate element
+      const cancelBtn = document.createElement('button');
+      cancelBtn.id = 'continuationCancelButton';
+      cancelBtn.className = 'action-btn cancel-btn';
+      cancelBtn.innerHTML = '<i class="fas fa-times"></i> Cancel';
+      
+      // Append buttons to action buttons container
+      actionBtns.appendChild(saveBtn);
+      actionBtns.appendChild(cancelBtn);
       continuationContainer.appendChild(actionBtns);
+      
+      // Create processing indicator
+      const processingIndicator = document.createElement('div');
+      processingIndicator.className = 'processing-indicator hidden'; // Start hidden
+      processingIndicator.style.display = 'none'; // Ensure it's completely hidden
+      processingIndicator.id = 'continuationProcessingIndicator';
+      processingIndicator.innerHTML = `
+        <div class="spinner"></div>
+        <span>Processing... </span>
+        <span id="continuationProcessingTimer">00:00</span>
+      `;
+      continuationContainer.appendChild(processingIndicator);
       
       // Append to transcription container
       transcriptionContainer.appendChild(continuationContainer);
       
       // Add event listeners
-      document.getElementById('continuationSaveBtn').addEventListener('click', saveRecording);
-      document.getElementById('continuationCancelBtn').addEventListener('click', cancelRecording);
+      document.getElementById('continuationRecordButton').addEventListener('click', toggleContinuationRecording);
+      document.getElementById('continuationSaveButton').addEventListener('click', saveContinuationRecording);
+      document.getElementById('continuationCancelButton').addEventListener('click', cancelContinuationRecording);
+      
+      // Add language selection event listeners
+      document.getElementById('continuationEnglishBtn').addEventListener('click', () => setContinuationLanguage('english'));
+      document.getElementById('continuationHebrewBtn').addEventListener('click', () => setContinuationLanguage('hebrew'));
       
       // Trigger animation after a short delay to ensure the DOM has updated
       setTimeout(() => {
         continuationContainer.style.opacity = '1';
         continuationContainer.style.transform = 'translateY(0)';
       }, 10);
+      
+      // Scroll to the continuation container with smooth animation
+      setTimeout(() => {
+        continuationContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     }
     
-    // Scroll to the continuation container with smooth animation
-    setTimeout(() => {
-      continuationContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-    
-    // Reset recording state
-    resetRecordingState();
+    // Reset recording state but keep continuation mode
+    resetRecordingState(true);
     
     // Show notification
-    showNotification('Continue recording mode activated. Click the microphone to start recording.');
+    showNotification('Continue recording mode activated. Select language and click the microphone to start recording.');
     
     return true;
   } catch (error) {
@@ -1377,6 +1479,228 @@ function showNotification(message, type = 'success') {
       notificationBar.classList.add('hidden');
     }, 500);
   }, 2000);
+}
+
+// Toggle continuation recording
+function toggleContinuationRecording() {
+  if (state.isRecording) {
+    // If recording, pause it
+    pauseRecording();
+    
+    // Only show action buttons if we have recorded something
+    if (state.audioChunks.length > 0) {
+      const continuationActionButtons = document.getElementById('continuationActionButtons');
+      if (continuationActionButtons) {
+        continuationActionButtons.classList.remove('hidden');
+      }
+    }
+  } else {
+    // If not recording, start it
+    startRecording();
+    
+    // Update UI for continuation mode
+    const continuationRecordButton = document.getElementById('continuationRecordButton');
+    const continuationStatus = document.getElementById('continuationRecordingStatus');
+    
+    if (continuationRecordButton) {
+      continuationRecordButton.classList.add('recording');
+    }
+    
+    if (continuationStatus) {
+      const statusText = continuationStatus.querySelector('.status-text');
+      if (statusText) {
+        statusText.textContent = 'Recording in progress...';
+      }
+    }
+    
+    // Hide action buttons when starting a new recording
+    const continuationActionButtons = document.getElementById('continuationActionButtons');
+    if (continuationActionButtons) {
+      continuationActionButtons.classList.add('hidden');
+    }
+    
+    // Hide processing indicator when starting a new recording
+    const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
+    if (continuationProcessingIndicator) {
+      continuationProcessingIndicator.classList.add('hidden');
+    }
+  }
+}
+
+// Set continuation language
+function setContinuationLanguage(language) {
+  // Update state
+  state.selectedLanguage = language;
+  
+  // Update UI
+  const englishBtn = document.getElementById('continuationEnglishBtn');
+  const hebrewBtn = document.getElementById('continuationHebrewBtn');
+  
+  if (englishBtn && hebrewBtn) {
+    if (language === 'english') {
+      englishBtn.classList.add('active');
+      hebrewBtn.classList.remove('active');
+    } else {
+      englishBtn.classList.remove('active');
+      hebrewBtn.classList.add('active');
+    }
+  }
+  
+  // Show notification
+  showNotification(`Language set to ${language === 'english' ? 'English' : 'Hebrew'}`);
+}
+
+
+
+// Save continuation recording
+async function saveContinuationRecording() {
+  // If still recording, stop it first
+  if (state.isRecording) {
+    stopRecording();
+  }
+  
+  if (state.audioChunks.length === 0) {
+    return;
+  }
+  
+  // Hide continuation action buttons
+  const continuationActionButtons = document.getElementById('continuationActionButtons');
+  if (continuationActionButtons) {
+    continuationActionButtons.classList.add('hidden');
+  }
+  
+  // Show continuation processing indicator
+  const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
+  if (continuationProcessingIndicator) {
+    continuationProcessingIndicator.classList.remove('hidden');
+    continuationProcessingIndicator.style.display = 'flex'; // Ensure it's visible
+  }
+  
+  // Start processing timer
+  state.processingStartTime = Date.now();
+  state.processingInterval = setInterval(updateProcessingTimer, 1000);
+  
+  // Create audio blob
+  const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
+  
+  // Create form data
+  const formData = new FormData();
+  formData.append('audio', audioBlob);
+  formData.append('language', state.selectedLanguage);
+  formData.append('continuationMode', 'true');
+  formData.append('recordingId', state.currentRecordingId);
+  
+  try {
+    // Send to server
+    const response = await fetch(`${API_URL}/upload`, {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error('Server error');
+    }
+    
+    const result = await response.json();
+    
+    // Clear processing timer
+    clearInterval(state.processingInterval);
+    
+    // Hide continuation processing indicator
+    if (continuationProcessingIndicator) {
+      continuationProcessingIndicator.classList.add('hidden');
+      continuationProcessingIndicator.style.display = 'none'; // Ensure it's completely hidden
+    }
+    
+    // Find the current recording
+    const currentRecording = state.recordings.find(r => r.id === state.currentRecordingId);
+    
+    if (currentRecording) {
+      // Update the recording with the new transcription appended
+      currentRecording.transcription = `${currentRecording.transcription}\n\n${result.transcription}`;
+      
+      // Update the UI
+      transcriptionText.textContent = currentRecording.transcription;
+      
+      // Update the recording on the server
+      await updateRecordingOnServer(currentRecording);
+      
+      // Show success notification
+      showNotification('Recording continued and transcription appended successfully!');
+      
+      // Reset continuation mode
+      state.continuationMode = false;
+      
+      // Remove continuation container if it exists
+      const continuationContainer = document.getElementById('continuationContainer');
+      if (continuationContainer) {
+        continuationContainer.remove();
+      }
+      
+      // Reset recording state
+      resetRecordingState();
+      
+      // Refresh recordings list to update UI
+      await fetchRecordings();
+    } else {
+      // If the current recording wasn't found, show an error
+      showNotification('Failed to find the current recording. Please try again.', 'error');
+      
+      // Reset recording state
+      resetRecordingState();
+    }
+  } catch (error) {
+    console.error('Error saving continuation recording:', error);
+    showNotification('Failed to process recording. Please try again.', 'error');
+    
+    // Clear processing timer
+    clearInterval(state.processingInterval);
+    
+    // Hide continuation processing indicator
+    if (continuationProcessingIndicator) {
+      continuationProcessingIndicator.classList.add('hidden');
+      continuationProcessingIndicator.style.display = 'none'; // Ensure it's completely hidden
+    }
+    
+    // Reset recording state
+    resetRecordingState();
+  }
+}
+
+// Cancel continuation recording
+function cancelContinuationRecording() {
+  // Stop recording if it's in progress
+  if (state.isRecording) {
+    stopRecording();
+  }
+  
+  // Reset recording state
+  resetRecordingState();
+  
+  // Hide continuation action buttons
+  const continuationActionButtons = document.getElementById('continuationActionButtons');
+  if (continuationActionButtons) {
+    continuationActionButtons.classList.add('hidden');
+  }
+  
+  // Remove continuation container with animation
+  const continuationContainer = document.getElementById('continuationContainer');
+  if (continuationContainer) {
+    // Fade out animation
+    continuationContainer.style.opacity = '0';
+    continuationContainer.style.transform = 'translateY(20px)';
+    
+    // Remove after animation completes
+    setTimeout(() => {
+      continuationContainer.remove();
+    }, 500);
+  }
+  
+  // Reset continuation mode
+  state.continuationMode = false;
+  
+  // Show notification
+  showNotification('Recording cancelled');
 }
 
 // Show delete confirmation dialog

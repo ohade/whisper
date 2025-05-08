@@ -8,6 +8,8 @@
 [2025-05-08 22:54:29] - Fixed bugs in the continue recording functionality and calendar day summary popup.
 [2025-05-08 22:57:42] - Addressing recording functionality issues with detailed subtasks for audio processing, memory leaks, and test requirements.
 [2025-05-08 23:02:56] - Fixed calendar issues by ensuring all dates are visible and fixing popup menu appearance when clicking on dates with records.
+[2025-05-08 23:37:43] - Improving the continue recording system to add language selection and fix the issue where it creates new records instead of appending.
+[2025-05-08 23:47:17] - Refactoring the continue recording component to work more consistently with the original recording component.
 
 ## Current Objectives
 - Set up project structure ✓
