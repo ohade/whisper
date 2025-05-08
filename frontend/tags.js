@@ -333,7 +333,10 @@ function createRecordingCard(recording) {
   
   // Add click event to navigate to recording
   card.addEventListener('click', () => {
-    window.location.href = `index.html?id=${recording.id}`;
+    // Store the recording ID in localStorage
+    localStorage.setItem('selectedRecordingId', recording.id);
+    // Navigate to index.html
+    window.location.href = 'index.html';
   });
   
   return card;

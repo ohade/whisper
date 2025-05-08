@@ -123,6 +123,15 @@ async function initApp() {
   
   // Render calendar
   renderCalendar();
+  
+  // Check if we have a recording ID in localStorage (from tag filter screen)
+  const selectedRecordingId = localStorage.getItem('selectedRecordingId');
+  if (selectedRecordingId) {
+    // Fetch and display the recording
+    await fetchRecordingDetails(selectedRecordingId);
+    // Clear the localStorage item
+    localStorage.removeItem('selectedRecordingId');
+  }
 }
 
 // Export functions for testing
