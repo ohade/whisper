@@ -936,7 +936,7 @@ async function saveEditedTitle() {
     
     // Show success message (only show for manual edits, not auto-saves)
     if (document.activeElement === transcriptionTitle) {
-      showNotification('Title updated');
+      showNotification('Title updated', 'success', true);
     }
     
     // Hide saving indicator after a short delay
@@ -993,7 +993,7 @@ async function saveEditedTranscription() {
     
     // Show notification only if the user is actively editing (not for auto-saves)
     if (document.activeElement === transcriptionText) {
-      showNotification('Transcription updated');
+      showNotification('Transcription updated', 'success', true);
     }
     
     // Hide saving indicator after a short delay
@@ -1645,10 +1645,16 @@ async function mergeTranscriptions() {
 }
 
 // Show notification
-function showNotification(message, type = 'success') {
+function showNotification(message, type = 'success', isSubtle = false) {
   // Set message and type
   notificationMessage.textContent = message;
-  notificationBar.className = `notification-bar ${type}`;
+  
+  // Apply classes based on type and subtlety
+  if (isSubtle) {
+    notificationBar.className = `notification-bar ${type} subtle`;
+  } else {
+    notificationBar.className = `notification-bar ${type}`;
+  }
   
   // Show notification
   notificationBar.classList.remove('hidden');
@@ -1656,13 +1662,15 @@ function showNotification(message, type = 'success') {
     notificationBar.classList.add('show');
   }, 10);
   
-  // Hide notification after delay
+  // Hide notification after delay (shorter for subtle notifications)
+  const displayTime = isSubtle ? 1200 : 2000;
+  
   setTimeout(() => {
     notificationBar.classList.remove('show');
     setTimeout(() => {
       notificationBar.classList.add('hidden');
     }, 500);
-  }, 2000);
+  }, displayTime);
 }
 
 // Toggle continuation recording
