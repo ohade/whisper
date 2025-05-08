@@ -35,6 +35,30 @@ const confirmationDialog = document.getElementById('confirmationDialog');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const cancelDeleteBtn = document.getElementById('cancelDeleteBtn');
 
+// Color palette for tags (across the spectrum)
+const TAG_COLORS = [
+  '#4a6fa5', // Blue
+  '#e74c3c', // Red
+  '#2ecc71', // Green
+  '#9b59b6', // Purple
+  '#f39c12', // Orange
+  '#1abc9c', // Teal
+  '#d35400', // Dark Orange
+  '#3498db', // Light Blue
+  '#e67e22', // Amber
+  '#16a085', // Green Sea
+  '#8e44ad', // Violet
+  '#27ae60', // Emerald
+  '#c0392b', // Dark Red
+  '#2980b9', // Belize Hole
+  '#f1c40f', // Yellow
+  '#7f8c8d', // Asbestos
+  '#2c3e50', // Midnight Blue
+  '#e84393', // Pink
+  '#6c5ce7', // Blue Purple
+  '#00cec9'  // Robin's Egg Blue
+];
+
 // App State
 const state = {
   isRecording: false,
@@ -51,6 +75,7 @@ const state = {
   currentRecordingId: null,
   relatedRecordings: [], // For tracking recordings that should be merged
   continuationMode: false, // Flag for when continuing a recording
+  tagColors: new Map(), // Map to store tag-to-color assignments
   calendar: {
     currentDate: new Date(),
     currentMonth: new Date().getMonth(),
@@ -531,6 +556,38 @@ function setLanguage(language) {
   }
 }
 
+// Assign colors to tags
+function assignTagColors() {
+  // Keep track of used colors to avoid duplicates
+  const usedColorIndices = new Set();
+  let colorIndex = 0;
+  
+  // Collect all unique tags from all recordings
+  const allTags = new Set();
+  state.recordings.forEach(recording => {
+    if (recording.tags && Array.isArray(recording.tags)) {
+      recording.tags.forEach(tag => allTags.add(tag));
+    }
+  });
+  
+  // Assign colors to tags that don't have one yet
+  allTags.forEach(tag => {
+    if (!state.tagColors.has(tag)) {
+      // Find an unused color
+      while (usedColorIndices.has(colorIndex)) {
+        colorIndex = (colorIndex + 1) % TAG_COLORS.length;
+      }
+      
+      // Assign the color and mark it as used
+      state.tagColors.set(tag, TAG_COLORS[colorIndex]);
+      usedColorIndices.add(colorIndex);
+      
+      // Move to the next color for the next tag
+      colorIndex = (colorIndex + 1) % TAG_COLORS.length;
+    }
+  });
+}
+
 // Fetch recordings
 async function fetchRecordings() {
   try {
@@ -542,6 +599,9 @@ async function fetchRecordings() {
     
     const recordings = await response.json();
     state.recordings = recordings;
+    
+    // Assign colors to tags
+    assignTagColors();
     
     // Update UI
     renderRecordingsList();
@@ -958,23 +1018,42 @@ function renderTags(tags) {
     return;
   }
   
-  const html = tags.map(tag => {
-    return `
-      <div class="tag">
-        <span>${tag}</span>
-        <span class="tag-remove" data-tag="${tag}">
-          <i class="fas fa-times"></i>
-        </span>
-      </div>
-    `;
-  }).join('');
+  tagsList.innerHTML = ''; // Clear existing tags
   
-  tagsList.innerHTML = html;
-  
-  // Add event listeners to remove buttons
-  document.querySelectorAll('.tag-remove').forEach(btn => {
-    const tag = btn.getAttribute('data-tag');
-    btn.addEventListener('click', () => removeTag(tag));
+  // Create and append each tag element
+  tags.forEach(tag => {
+    const tagEl = document.createElement('div');
+    tagEl.className = 'tag';
+    
+    // Get the tag color
+    const tagColor = state.tagColors.get(tag);
+    
+    // Apply the tag color if available
+    if (tagColor) {
+      tagEl.style.backgroundColor = tagColor + '22'; // 13% opacity
+      tagEl.style.color = tagColor;
+      tagEl.style.borderColor = tagColor;
+    }
+    
+    // Create tag text
+    const tagText = document.createElement('span');
+    tagText.textContent = tag;
+    tagEl.appendChild(tagText);
+    
+    // Create remove button
+    const removeBtn = document.createElement('span');
+    removeBtn.className = 'tag-remove';
+    removeBtn.setAttribute('data-tag', tag);
+    
+    const icon = document.createElement('i');
+    icon.className = 'fas fa-times';
+    removeBtn.appendChild(icon);
+    
+    // Add click event to remove button
+    removeBtn.addEventListener('click', () => removeTag(tag));
+    
+    tagEl.appendChild(removeBtn);
+    tagsList.appendChild(tagEl);
   });
 }
 

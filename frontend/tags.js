@@ -1,6 +1,30 @@
 // Constants
 const API_URL = 'http://localhost:3000/api';
 
+// Color palette for tags (across the spectrum)
+const TAG_COLORS = [
+  '#4a6fa5', // Blue
+  '#e74c3c', // Red
+  '#2ecc71', // Green
+  '#9b59b6', // Purple
+  '#f39c12', // Orange
+  '#1abc9c', // Teal
+  '#d35400', // Dark Orange
+  '#3498db', // Light Blue
+  '#e67e22', // Amber
+  '#16a085', // Green Sea
+  '#8e44ad', // Violet
+  '#27ae60', // Emerald
+  '#c0392b', // Dark Red
+  '#2980b9', // Belize Hole
+  '#f1c40f', // Yellow
+  '#7f8c8d', // Asbestos
+  '#2c3e50', // Midnight Blue
+  '#e84393', // Pink
+  '#6c5ce7', // Blue Purple
+  '#00cec9'  // Robin's Egg Blue
+];
+
 // State
 const state = {
   recordings: [],
@@ -8,7 +32,8 @@ const state = {
   selectedLanguages: new Set(),
   selectedTags: new Set(),
   allLanguages: new Set(),
-  allTags: new Set()
+  allTags: new Set(),
+  tagColors: new Map() // Map to store tag-to-color assignments
 };
 
 // DOM Elements
@@ -31,6 +56,7 @@ async function initApp() {
   // Event listeners
   selectAllBtn.addEventListener('click', selectAllFilters);
   clearAllBtn.addEventListener('click', clearAllFilters);
+  document.getElementById('deselectTagsBtn').addEventListener('click', deselectAllTags);
 }
 
 // Fetch all recordings
@@ -54,6 +80,10 @@ function extractLanguagesAndTags() {
   state.allLanguages.clear();
   state.allTags.clear();
   
+  // Keep track of used colors to avoid duplicates
+  const usedColorIndices = new Set();
+  let colorIndex = 0;
+  
   state.recordings.forEach(recording => {
     if (recording.language) {
       state.allLanguages.add(recording.language);
@@ -64,6 +94,21 @@ function extractLanguagesAndTags() {
       recording.tags.forEach(tag => {
         state.allTags.add(tag);
         state.selectedTags.add(tag); // Select all tags by default
+        
+        // Assign a color to this tag if it doesn't have one yet
+        if (!state.tagColors.has(tag)) {
+          // Find an unused color
+          while (usedColorIndices.has(colorIndex)) {
+            colorIndex = (colorIndex + 1) % TAG_COLORS.length;
+          }
+          
+          // Assign the color and mark it as used
+          state.tagColors.set(tag, TAG_COLORS[colorIndex]);
+          usedColorIndices.add(colorIndex);
+          
+          // Move to the next color for the next tag
+          colorIndex = (colorIndex + 1) % TAG_COLORS.length;
+        }
       });
     }
   });
@@ -112,6 +157,21 @@ function createFilterChip(label, isSelected, type) {
     chip.dataset.language = label;
   } else {
     chip.dataset.tag = label;
+    
+    // Apply the tag's assigned color
+    const tagColor = state.tagColors.get(label);
+    if (tagColor) {
+      // Set custom properties for both selected and unselected states
+      chip.style.setProperty('--tag-color', tagColor);
+      chip.style.setProperty('--tag-color-light', tagColor + '33'); // Add 33 for 20% opacity
+      chip.style.borderColor = tagColor;
+      
+      if (!isSelected) {
+        // For unselected state, use a lighter version of the color
+        chip.style.color = tagColor;
+        chip.style.backgroundColor = tagColor + '15'; // 10% opacity
+      }
+    }
   }
   
   // Add ripple effect
@@ -192,7 +252,7 @@ function applyFilters() {
     state.filteredRecordings = state.recordings.filter(recording => {
       const languageMatch = state.selectedLanguages.has(recording.language);
       const tagMatch = recording.tags && recording.tags.some(tag => state.selectedTags.has(tag));
-      return languageMatch || tagMatch;
+      return languageMatch && tagMatch;
     });
   }
   
@@ -254,6 +314,15 @@ function createRecordingCard(recording) {
       const tagEl = document.createElement('span');
       tagEl.className = 'recording-tag';
       tagEl.textContent = tag;
+      
+      // Apply the tag's assigned color
+      const tagColor = state.tagColors.get(tag);
+      if (tagColor) {
+        tagEl.style.backgroundColor = tagColor + '22'; // 13% opacity
+        tagEl.style.color = tagColor;
+        tagEl.style.borderColor = tagColor + '55'; // 33% opacity
+      }
+      
       tagsContainer.appendChild(tagEl);
     });
     
@@ -332,6 +401,16 @@ function clearAllFilters() {
   
   applyFilters();
   renderLanguageFilters();
+  renderTagFilters();
+  updateFilterInfo();
+}
+
+// Deselect all tags but keep language selections
+function deselectAllTags() {
+  // Clear only the tags, keep languages
+  state.selectedTags.clear();
+  
+  applyFilters();
   renderTagFilters();
   updateFilterInfo();
 }

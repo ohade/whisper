@@ -52,12 +52,20 @@
     user-select: none;
     position: relative;
     overflow: hidden;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .filter-chip.selected {
-    background-color: var(--primary-color);
+    background-color: var(--tag-color, var(--primary-color));
     color: white;
-    border-color: var(--primary-color);
+    border-color: var(--tag-color, var(--primary-color));
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.filter-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
 .filter-chip.language-english.selected {
@@ -104,17 +112,63 @@
 
 .filter-actions {
     display: flex;
-    gap: 10px;
+    flex-wrap: wrap;
+    gap: 12px;
     margin-top: 20px;
+    justify-content: center;
 }
 
 .filter-btn {
-    padding: 10px 15px;
+    padding: 12px 18px;
     border: none;
     border-radius: var(--border-radius);
     cursor: pointer;
     font-weight: 600;
     transition: var(--transition);
+    font-size: 1rem;
+    min-width: 150px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+}
+
+.filter-btn:active {
+    transform: translateY(2px);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.filter-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+.filter-btn:focus:not(:active)::after {
+    animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+    0% {
+        transform: scale(0, 0);
+        opacity: 0.5;
+    }
+    20% {
+        transform: scale(25, 25);
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 0;
+        transform: scale(40, 40);
+    }
 }
 
 #selectAllBtn {
@@ -124,6 +178,19 @@
 
 #selectAllBtn:hover {
     background-color: #3a5a84;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+#deselectTagsBtn {
+    background-color: #e67e22;
+    color: white;
+}
+
+#deselectTagsBtn:hover {
+    background-color: #d35400;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 #clearAllBtn {
@@ -133,6 +200,8 @@
 
 #clearAllBtn:hover {
     background-color: #5a6268;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .back-to-home {
@@ -207,9 +276,20 @@
 
 .recording-tag {
     font-size: 0.8rem;
-    padding: 3px 8px;
-    border-radius: 10px;
+    padding: 4px 10px;
+    border-radius: 12px;
     background-color: var(--light-color);
+    margin: 2px;
+    display: inline-block;
+    font-weight: 500;
+    border: 1px solid transparent;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+}
+
+.recording-tag:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
 
 .recording-language {
