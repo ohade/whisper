@@ -112,6 +112,9 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Set up event listeners
 function setupEventListeners() {
+  // Home button
+  document.getElementById('homeButton').addEventListener('click', goToHomeScreen);
+  
   // Record button
   recordButton.addEventListener('click', toggleRecording);
   
@@ -1717,6 +1720,31 @@ function showDeleteConfirmation() {
 // Hide delete confirmation dialog
 function hideDeleteConfirmation() {
   confirmationDialog.classList.add('hidden');
+}
+
+// Go to home screen (recorder view)
+function goToHomeScreen() {
+  // Hide transcription container if visible
+  transcriptionContainer.classList.add('hidden');
+  
+  // Show recorder container
+  recorderContainer.classList.remove('hidden');
+  
+  // Reset continuation mode and related recordings
+  state.continuationMode = false;
+  state.relatedRecordings = [];
+  
+  // Hide merge button
+  document.getElementById('mergeTranscriptionsBtn').classList.add('hidden');
+  
+  // Hide any continuation container if visible
+  const continuationContainer = document.getElementById('continuationContainer');
+  if (continuationContainer) {
+    continuationContainer.remove();
+  }
+  
+  // Reset current recording ID
+  state.currentRecordingId = null;
 }
 
 // Delete recording

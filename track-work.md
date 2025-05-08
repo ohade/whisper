@@ -31,6 +31,11 @@
   - [x] Update save and cancel button styling to ensure proper hover effects. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
   - [x] Ensure consistent button sizing between original and continuation components. Created: 2025-05-09 00:25:35. Completed: 2025-05-09 00:28:41
 
+- [x] Add more visible home button for navigation. Created: 2025-05-09 00:33:12. Completed: 2025-05-09 00:33:12
+  - [x] Add home button to app header with prominent styling. Created: 2025-05-09 00:33:12. Completed: 2025-05-09 00:33:12
+  - [x] Implement goToHomeScreen function to handle navigation. Created: 2025-05-09 00:33:12. Completed: 2025-05-09 00:33:12
+  - [x] Ensure home button is accessible from all screens. Created: 2025-05-09 00:33:12. Completed: 2025-05-09 00:33:12
+
 ## Additional Requirements
 - [x] Add unique colors for each language in the sidebar. Created: 2025-05-08. Completed: 2025-05-08
 - [x] Add tagging functionality for recordings. Created: 2025-05-08. Completed: 2025-05-08
