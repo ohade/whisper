@@ -1,0 +1,241 @@
+/* Tags Filter Page Styles */
+:root {
+    --primary-color: #4a6fa5;
+    --secondary-color: #6b8cae;
+    --accent-color: #ff6b6b;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --gray-color: #6c757d;
+    --border-radius: 8px;
+    --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+.tags-filter-container {
+    margin-top: 20px;
+}
+
+.filter-section {
+    margin-bottom: 25px;
+    background-color: var(--light-color);
+    padding: 15px;
+    border-radius: var(--border-radius);
+}
+
+.filter-section h3 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    color: var(--primary-color);
+    font-size: 1.1rem;
+    border-bottom: 1px solid #e1e4e8;
+    padding-bottom: 8px;
+}
+
+.language-filters,
+.tag-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.filter-chip {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: var(--transition);
+    background-color: white;
+    border: 1px solid #e1e4e8;
+    user-select: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.filter-chip.selected {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.filter-chip.language-english.selected {
+    background-color: #4a6fa5;
+    border-color: #4a6fa5;
+}
+
+.filter-chip.language-hebrew.selected {
+    background-color: #e67e22;
+    border-color: #e67e22;
+}
+
+.filter-chip::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.filter-chip:hover::before {
+    opacity: 1;
+}
+
+.filter-chip-ripple {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple 0.6s linear;
+    pointer-events: none;
+}
+
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+.filter-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.filter-btn {
+    padding: 10px 15px;
+    border: none;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+#selectAllBtn {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+#selectAllBtn:hover {
+    background-color: #3a5a84;
+}
+
+#clearAllBtn {
+    background-color: var(--gray-color);
+    color: white;
+}
+
+#clearAllBtn:hover {
+    background-color: #5a6268;
+}
+
+.back-to-home {
+    margin-top: 30px;
+}
+
+.back-link {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.back-link:hover {
+    color: #3a5a84;
+}
+
+.filter-info {
+    background-color: var(--light-color);
+    padding: 10px 15px;
+    border-radius: var(--border-radius);
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    color: var(--dark-color);
+}
+
+.filtered-recordings {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.recording-card {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 20px;
+    box-shadow: var(--box-shadow);
+    transition: var(--transition);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.recording-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+}
+
+.recording-card h3 {
+    margin-top: 0;
+    margin-bottom: 10px;
+    color: var(--primary-color);
+}
+
+.recording-meta {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    font-size: 0.8rem;
+    color: var(--gray-color);
+}
+
+.recording-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 10px;
+}
+
+.recording-tag {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+    border-radius: 10px;
+    background-color: var(--light-color);
+}
+
+.recording-language {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    color: white;
+}
+
+.recording-language.english {
+    background-color: #4a6fa5;
+}
+
+.recording-language.hebrew {
+    background-color: #e67e22;
+}
+
+.no-recordings {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 50px;
+    background-color: var(--light-color);
+    border-radius: var(--border-radius);
+    color: var(--gray-color);
+    font-style: italic;
+}
