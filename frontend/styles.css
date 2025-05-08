@@ -608,6 +608,41 @@ body {
     background-color: #c82333;
 }
 
+/* Auto-save indicator */
+.auto-save-indicator {
+  font-size: 0.8rem;
+  color: #666;
+  margin-left: 10px;
+  display: inline-flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.auto-save-indicator i {
+  margin-right: 5px;
+  font-size: 0.9rem;
+  animation: spin 2s linear infinite;
+  animation-play-state: paused;
+}
+
+.transcription-auto-save {
+  margin-top: 10px;
+  justify-content: flex-end;
+  display: flex;
+}
+
+/* Animation for the auto-save icon when saving */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Add this class via JavaScript when actively saving */
+.saving i {
+  animation-play-state: running;
+  color: #4a6fa5;
+}
+
 /* Continuation Styles */
 .continuation-container {
     margin-top: 40px;

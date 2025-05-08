@@ -81,6 +81,10 @@ const state = {
     currentMonth: new Date().getMonth(),
     currentYear: new Date().getFullYear(),
     selectedDay: null
+  },
+  autoSave: {
+    titleTimer: null,
+    transcriptionTimer: null
   }
 };
 
@@ -156,37 +160,66 @@ function setupEventListeners() {
   englishBtn.addEventListener('click', () => setLanguage('english'));
   hebrewBtn.addEventListener('click', () => setLanguage('hebrew'));
   
-  // Save and cancel buttons
-  saveButton.addEventListener('click', saveRecording);
-  cancelButton.addEventListener('click', cancelRecording);
-  
   // Back button
   backButton.addEventListener('click', () => {
-    transcriptionContainer.classList.add('hidden');
-    recorderContainer.classList.remove('hidden');
-    state.continuationMode = false;
-    state.relatedRecordings = [];
-    document.getElementById('mergeTranscriptionsBtn').classList.add('hidden');
+    // If we're in continuation mode, ask for confirmation
+    if (state.continuationMode) {
+      if (confirm('Are you sure you want to go back? Any unsaved recording will be lost.')) {
+        cancelContinuationRecording();
+        goToHomeScreen();
+      }
+    } else {
+      // Auto-save content before going back
+      saveEditedTitle();
+      saveEditedTranscription();
+      goToHomeScreen();
+    }
   });
   
-  // Continue recording button
-  document.getElementById('continueRecordingBtn').addEventListener('click', continueRecording);
+  // Auto-save title on input and blur
+  transcriptionTitle.addEventListener('input', () => {
+    // Clear any existing timer
+    if (state.autoSave.titleTimer) {
+      clearTimeout(state.autoSave.titleTimer);
+    }
+    
+    // Set a new timer to save after 500ms of inactivity
+    state.autoSave.titleTimer = setTimeout(() => {
+      saveEditedTitle();
+    }, 500);
+  });
   
-  // Merge transcriptions button
-  document.getElementById('mergeTranscriptionsBtn').addEventListener('click', mergeTranscriptions);
+  transcriptionTitle.addEventListener('blur', saveEditedTitle);
   
-  // Delete recording button
+  // Auto-save transcription on input and blur
+  transcriptionText.addEventListener('input', () => {
+    // Clear any existing timer
+    if (state.autoSave.transcriptionTimer) {
+      clearTimeout(state.autoSave.transcriptionTimer);
+    }
+    
+    // Set a new timer to save after 500ms of inactivity
+    state.autoSave.transcriptionTimer = setTimeout(() => {
+      saveEditedTranscription();
+    }, 500);
+  });
+  
+  transcriptionText.addEventListener('blur', saveEditedTranscription);
+  
+  // Delete recording
   deleteRecordingBtn.addEventListener('click', showDeleteConfirmation);
   
   // Confirmation dialog buttons
   confirmDeleteBtn.addEventListener('click', deleteRecording);
   cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
   
-  // Edit buttons
-  saveEditedTitleBtn.addEventListener('click', saveEditedTitle);
-  saveTranscriptionBtn.addEventListener('click', saveEditedTranscription);
+  // Continue recording
+  document.getElementById('continueRecordingBtn').addEventListener('click', continueRecording);
   
-  // Tag functionality
+  // Merge transcriptions
+  document.getElementById('mergeTranscriptionsBtn').addEventListener('click', mergeTranscriptions);
+  
+  // Add tag
   addTagBtn.addEventListener('click', addTag);
   newTagInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
@@ -209,6 +242,22 @@ function setupEventListeners() {
     if (!dayRecordingsPopup.contains(e.target) && 
         !e.target.classList.contains('calendar-day')) {
       dayRecordingsPopup.classList.add('hidden');
+    }
+  });
+  
+  // Add event listener for page visibility change to save content when user switches tabs
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && state.currentRecordingId) {
+      saveEditedTitle();
+      saveEditedTranscription();
+    }
+  });
+  
+  // Add event listener for beforeunload to save content when user closes the page
+  window.addEventListener('beforeunload', () => {
+    if (state.currentRecordingId) {
+      saveEditedTitle();
+      saveEditedTranscription();
     }
   });
 }
@@ -787,6 +836,14 @@ async function fetchRecordingDetails(id) {
 // Display transcription
 function displayTranscription(recording) {
   try {
+    // Clear any existing auto-save timers
+    if (state.autoSave.titleTimer) {
+      clearTimeout(state.autoSave.titleTimer);
+    }
+    if (state.autoSave.transcriptionTimer) {
+      clearTimeout(state.autoSave.transcriptionTimer);
+    }
+    
     // Hide recorder, show transcription
     recorderContainer.classList.add('hidden');
     transcriptionContainer.classList.remove('hidden');
@@ -802,38 +859,24 @@ function displayTranscription(recording) {
     transcriptionDate.textContent = date.toLocaleString();
     
     // Set language indicator
-    transcriptionLanguage.textContent = recording.language === 'hebrew' ? 'Hebrew' : 'English';
+    transcriptionLanguage.textContent = recording.language === 'english' ? 'English' : 'Hebrew';
     transcriptionLanguage.className = `language-indicator ${recording.language}`;
     
     // Set transcription text
-    transcriptionText.textContent = recording.transcription || 'No transcription available';
+    transcriptionText.textContent = recording.transcription || '';
     
-    // Set direction for Hebrew text
-    if (recording.language === 'hebrew') {
-      transcriptionText.classList.add('rtl');
-    } else {
-      transcriptionText.classList.remove('rtl');
-    }
-    
-    // Set audio source
+    // Set audio source if available
     if (recording.audioUrl) {
       audioPlayer.src = recording.audioUrl;
-      audioPlayer.parentElement.classList.remove('hidden');
+      audioPlayer.classList.remove('hidden');
     } else {
-      audioPlayer.parentElement.classList.add('hidden');
+      audioPlayer.classList.add('hidden');
     }
     
     // Render tags
     renderTags(recording.tags || []);
     
-    // Reset recording state
-    resetRecordingState();
-    
-    // Clear processing indicator
-    processingIndicator.classList.add('hidden');
-    clearInterval(state.processingInterval);
-    
-    // Make sure the continue recording button is visible
+    // Show continue recording button
     document.getElementById('continueRecordingBtn').classList.remove('hidden');
     
     // Remove any existing continuation container if present
@@ -867,6 +910,15 @@ async function saveEditedTitle() {
     const recordingIndex = state.recordings.findIndex(r => r.id === recordingId);
     if (recordingIndex === -1) return;
     
+    // If title hasn't changed, don't update
+    if (state.recordings[recordingIndex].title === newTitle) return;
+    
+    // Show saving indicator
+    const titleAutoSaveIndicator = document.querySelector('.title-edit-container .auto-save-indicator');
+    if (titleAutoSaveIndicator) {
+      titleAutoSaveIndicator.classList.add('saving');
+    }
+    
     // Update recording in state
     state.recordings[recordingIndex].title = newTitle;
     
@@ -882,12 +934,27 @@ async function saveEditedTitle() {
       sidebarItem.textContent = newTitle;
     }
     
-    // Show success message
-    showNotification('Title updated successfully!');
+    // Show success message (only show for manual edits, not auto-saves)
+    if (document.activeElement === transcriptionTitle) {
+      showNotification('Title updated');
+    }
+    
+    // Hide saving indicator after a short delay
+    setTimeout(() => {
+      if (titleAutoSaveIndicator) {
+        titleAutoSaveIndicator.classList.remove('saving');
+      }
+    }, 1000);
     
   } catch (error) {
     console.error('Error updating title:', error);
     showNotification('Failed to update title. Please try again.', 'error');
+    
+    // Hide saving indicator if there was an error
+    const titleAutoSaveIndicator = document.querySelector('.title-edit-container .auto-save-indicator');
+    if (titleAutoSaveIndicator) {
+      titleAutoSaveIndicator.classList.remove('saving');
+    }
   }
 }
 
@@ -900,7 +967,6 @@ async function saveEditedTranscription() {
   
   try {
     const newTranscription = transcriptionText.textContent.trim();
-    console.log(`Saving new transcription for recording ID: ${state.currentRecordingId}`);
     
     // Find the recording in state
     const recordingIndex = state.recordings.findIndex(r => r.id === state.currentRecordingId);
@@ -908,17 +974,44 @@ async function saveEditedTranscription() {
       throw new Error('Recording not found in state');
     }
     
+    // If transcription hasn't changed, don't update
+    if (state.recordings[recordingIndex].transcription === newTranscription) return;
+    
+    // Show saving indicator
+    const transcriptionAutoSaveIndicator = document.querySelector('.transcription-auto-save');
+    if (transcriptionAutoSaveIndicator) {
+      transcriptionAutoSaveIndicator.classList.add('saving');
+    }
+    
+    console.log(`Saving new transcription for recording ID: ${state.currentRecordingId}`);
+    
     // Update the transcription
     state.recordings[recordingIndex].transcription = newTranscription;
     
     // Save to server
     await updateRecordingOnServer(state.recordings[recordingIndex]);
     
-    showNotification('Transcription updated successfully');
+    // Show notification only if the user is actively editing (not for auto-saves)
+    if (document.activeElement === transcriptionText) {
+      showNotification('Transcription updated');
+    }
+    
+    // Hide saving indicator after a short delay
+    setTimeout(() => {
+      if (transcriptionAutoSaveIndicator) {
+        transcriptionAutoSaveIndicator.classList.remove('saving');
+      }
+    }, 1000);
     
   } catch (error) {
     console.error('Error saving transcription:', error);
     showNotification(`Failed to save transcription: ${error.message}`, 'error');
+    
+    // Hide saving indicator if there was an error
+    const transcriptionAutoSaveIndicator = document.querySelector('.transcription-auto-save');
+    if (transcriptionAutoSaveIndicator) {
+      transcriptionAutoSaveIndicator.classList.remove('saving');
+    }
   }
 }
 

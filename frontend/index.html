@@ -74,9 +74,7 @@
                 <div class="transcription-header">
                     <div class="title-edit-container">
                         <h2 id="transcriptionTitle" contenteditable="true">Transcription</h2>
-                        <button id="saveEditedTitleBtn" class="edit-btn">
-                            <i class="fas fa-save"></i> Save Title
-                        </button>
+                        <span class="auto-save-indicator"><i class="fas fa-sync-alt"></i> Auto-save enabled</span>
                     </div>
                     <div class="transcription-meta">
                         <span id="transcriptionDate"></span>
@@ -92,9 +90,9 @@
                     <div class="transcription-text" id="transcriptionText" contenteditable="true">
                         <!-- Transcription will be displayed here -->
                     </div>
-                    <button id="saveTranscriptionBtn" class="edit-btn">
-                        <i class="fas fa-save"></i> Save Changes
-                    </button>
+                    <div class="auto-save-indicator transcription-auto-save">
+                        <i class="fas fa-sync-alt"></i> Changes are saved automatically
+                    </div>
                 </div>
                 
                 <div class="tags-container">
