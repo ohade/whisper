@@ -431,18 +431,33 @@ function stopRecording() {
   }
 }
 
-// Save recording
+// Save recording - unified function for both regular and continuation recordings
 async function saveRecording() {
-  // If in continuation mode, delegate to saveContinuationRecording
-  if (state.continuationMode) {
-    return saveContinuationRecording();
-  }
+  // Determine if we're in continuation mode
+  const isContinuation = state.continuationMode;
+  
+  // Get the appropriate UI elements based on mode
+  const actionButtonsElement = isContinuation ? 
+    document.getElementById('continuationActionButtons') : 
+    actionButtons;
+  
+  const processingIndicatorElement = isContinuation ? 
+    document.getElementById('continuationProcessingIndicator') : 
+    processingIndicator;
   
   // If still recording, stop it first and wait for data to be available
   if (state.isRecording) {
     // Show processing indicator immediately to give user feedback
-    actionButtons.classList.add('hidden');
-    processingIndicator.classList.remove('hidden');
+    if (actionButtonsElement) {
+      actionButtonsElement.classList.add('hidden');
+    }
+    
+    if (processingIndicatorElement) {
+      processingIndicatorElement.classList.remove('hidden');
+      if (isContinuation) {
+        processingIndicatorElement.style.display = 'flex'; // Ensure it's visible for continuation mode
+      }
+    }
     
     // Set the isSaving flag to prevent duplicate chunks
     state.isSaving = true;
@@ -464,17 +479,30 @@ async function saveRecording() {
     await dataAvailablePromise;
   }
   
+  // Check if we have audio data
   if (state.audioChunks.length === 0) {
-    processingIndicator.classList.add('hidden');
+    if (processingIndicatorElement) {
+      processingIndicatorElement.classList.add('hidden');
+      if (isContinuation) {
+        processingIndicatorElement.style.display = 'none';
+      }
+    }
     showNotification('No audio recorded. Please try again.', 'error');
     return;
   }
   
   // Hide action buttons
-  actionButtons.classList.add('hidden');
+  if (actionButtonsElement) {
+    actionButtonsElement.classList.add('hidden');
+  }
   
   // Show processing indicator
-  processingIndicator.classList.remove('hidden');
+  if (processingIndicatorElement) {
+    processingIndicatorElement.classList.remove('hidden');
+    if (isContinuation) {
+      processingIndicatorElement.style.display = 'flex';
+    }
+  }
   
   // Start processing timer
   state.processingStartTime = Date.now();
@@ -487,6 +515,12 @@ async function saveRecording() {
   const formData = new FormData();
   formData.append('audio', audioBlob);
   formData.append('language', state.selectedLanguage);
+  
+  // Add continuation-specific data if needed
+  if (isContinuation) {
+    formData.append('continuationMode', 'true');
+    formData.append('recordingId', state.currentRecordingId);
+  }
   
   try {
     // Send to server
@@ -505,16 +539,53 @@ async function saveRecording() {
     clearInterval(state.processingInterval);
     
     // Hide processing indicator
-    processingIndicator.classList.add('hidden');
+    if (processingIndicatorElement) {
+      processingIndicatorElement.classList.add('hidden');
+      if (isContinuation) {
+        processingIndicatorElement.style.display = 'none';
+      }
+    }
+    
+    // Handle the result based on mode
+    if (isContinuation) {
+      // Find the current recording
+      const currentRecording = state.recordings.find(r => r.id === state.currentRecordingId);
+      
+      if (currentRecording) {
+        // Update the recording with the new transcription appended
+        currentRecording.transcription = `${currentRecording.transcription}\n\n${result.transcription}`;
+        
+        // Update the UI
+        transcriptionText.textContent = currentRecording.transcription;
+        
+        // Update the recording on the server
+        await updateRecordingOnServer(currentRecording);
+        
+        // Show success notification
+        showNotification('Recording continued and transcription appended successfully!');
+        
+        // Reset continuation mode
+        state.continuationMode = false;
+        
+        // Remove continuation container if it exists
+        const continuationContainer = document.getElementById('continuationContainer');
+        if (continuationContainer) {
+          continuationContainer.remove();
+        }
+      } else {
+        // If the current recording wasn't found, show an error
+        showNotification('Failed to find the current recording. Please try again.', 'error');
+      }
+    } else {
+      // For regular recordings, display the transcription
+      displayTranscription(result);
+    }
     
     // Reset recording state
     resetRecordingState();
     
     // Refresh recordings list
     await fetchRecordings();
-    
-    // Show transcription
-    displayTranscription(result);
     
     // Reset the isSaving flag
     state.isSaving = false;
@@ -526,7 +597,12 @@ async function saveRecording() {
     clearInterval(state.processingInterval);
     
     // Hide processing indicator
-    processingIndicator.classList.add('hidden');
+    if (processingIndicatorElement) {
+      processingIndicatorElement.classList.add('hidden');
+      if (isContinuation) {
+        processingIndicatorElement.style.display = 'none';
+      }
+    }
     
     // Reset recording state
     resetRecordingState();
@@ -1596,7 +1672,7 @@ async function continueRecording() {
       
       // Add event listeners
       document.getElementById('continuationRecordButton').addEventListener('click', toggleContinuationRecording);
-      document.getElementById('continuationSaveButton').addEventListener('click', saveContinuationRecording);
+      document.getElementById('continuationSaveButton').addEventListener('click', saveRecording);
       document.getElementById('continuationCancelButton').addEventListener('click', cancelContinuationRecording);
       
       // Add language selection event listeners
@@ -1791,167 +1867,6 @@ function setContinuationLanguage(language) {
   
   // Show notification
   showNotification(`Language set to ${language === 'english' ? 'English' : 'Hebrew'}`);
-}
-
-
-
-// Save continuation recording
-async function saveContinuationRecording() {
-  // If still recording, stop it first and wait for data to be available
-  if (state.isRecording) {
-    // Show processing indicator immediately to give user feedback
-    const continuationActionButtons = document.getElementById('continuationActionButtons');
-    if (continuationActionButtons) {
-      continuationActionButtons.classList.add('hidden');
-    }
-    
-    const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
-    if (continuationProcessingIndicator) {
-      continuationProcessingIndicator.classList.remove('hidden');
-      continuationProcessingIndicator.style.display = 'flex'; // Ensure it's visible
-    }
-    
-    // Set the isSaving flag to prevent duplicate chunks
-    state.isSaving = true;
-    
-    // Create a promise that resolves when the dataavailable event fires
-    const dataAvailablePromise = new Promise((resolve) => {
-      // Only set up this listener if we're currently recording
-      const dataHandler = (event) => {
-        state.mediaRecorder.removeEventListener('dataavailable', dataHandler);
-        state.audioChunks.push(event.data);
-        resolve();
-      };
-      
-      state.mediaRecorder.addEventListener('dataavailable', dataHandler);
-      stopRecording();
-    });
-    
-    // Wait for the data to be available before proceeding
-    await dataAvailablePromise;
-  }
-  
-  if (state.audioChunks.length === 0) {
-    const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
-    if (continuationProcessingIndicator) {
-      continuationProcessingIndicator.classList.add('hidden');
-      continuationProcessingIndicator.style.display = 'none';
-    }
-    showNotification('No audio recorded. Please try again.', 'error');
-    return;
-  }
-  
-  // Hide continuation action buttons
-  const continuationActionButtons = document.getElementById('continuationActionButtons');
-  if (continuationActionButtons) {
-    continuationActionButtons.classList.add('hidden');
-  }
-  
-  // Show continuation processing indicator
-  const continuationProcessingIndicator = document.getElementById('continuationProcessingIndicator');
-  if (continuationProcessingIndicator) {
-    continuationProcessingIndicator.classList.remove('hidden');
-    continuationProcessingIndicator.style.display = 'flex'; // Ensure it's visible
-  }
-  
-  // Start processing timer
-  state.processingStartTime = Date.now();
-  state.processingInterval = setInterval(updateProcessingTimer, 1000);
-  
-  // Create audio blob
-  const audioBlob = new Blob(state.audioChunks, { type: 'audio/webm' });
-  
-  // Create form data
-  const formData = new FormData();
-  formData.append('audio', audioBlob);
-  formData.append('language', state.selectedLanguage);
-  formData.append('continuationMode', 'true');
-  formData.append('recordingId', state.currentRecordingId);
-  
-  try {
-    // Send to server
-    const response = await fetch(`${API_URL}/upload`, {
-      method: 'POST',
-      body: formData
-    });
-    
-    if (!response.ok) {
-      throw new Error('Server error');
-    }
-    
-    const result = await response.json();
-    
-    // Clear processing timer
-    clearInterval(state.processingInterval);
-    
-    // Hide continuation processing indicator
-    if (continuationProcessingIndicator) {
-      continuationProcessingIndicator.classList.add('hidden');
-      continuationProcessingIndicator.style.display = 'none'; // Ensure it's completely hidden
-    }
-    
-    // Find the current recording
-    const currentRecording = state.recordings.find(r => r.id === state.currentRecordingId);
-    
-    if (currentRecording) {
-      // Update the recording with the new transcription appended
-      currentRecording.transcription = `${currentRecording.transcription}\n\n${result.transcription}`;
-      
-      // Update the UI
-      transcriptionText.textContent = currentRecording.transcription;
-      
-      // Update the recording on the server
-      await updateRecordingOnServer(currentRecording);
-      
-      // Show success notification
-      showNotification('Recording continued and transcription appended successfully!');
-      
-      // Reset continuation mode
-      state.continuationMode = false;
-      
-      // Remove continuation container if it exists
-      const continuationContainer = document.getElementById('continuationContainer');
-      if (continuationContainer) {
-        continuationContainer.remove();
-      }
-      
-      // Reset recording state
-      resetRecordingState();
-      
-      // Reset the isSaving flag
-      state.isSaving = false;
-      
-      // Refresh recordings list to update UI
-      await fetchRecordings();
-    } else {
-      // If the current recording wasn't found, show an error
-      showNotification('Failed to find the current recording. Please try again.', 'error');
-      
-      // Reset recording state
-      resetRecordingState();
-      
-      // Reset the isSaving flag
-      state.isSaving = false;
-    }
-  } catch (error) {
-    console.error('Error saving continuation recording:', error);
-    showNotification('Failed to process recording. Please try again.', 'error');
-    
-    // Clear processing timer
-    clearInterval(state.processingInterval);
-    
-    // Hide continuation processing indicator
-    if (continuationProcessingIndicator) {
-      continuationProcessingIndicator.classList.add('hidden');
-      continuationProcessingIndicator.style.display = 'none'; // Ensure it's completely hidden
-    }
-    
-    // Reset recording state
-    resetRecordingState();
-    
-    // Reset the isSaving flag
-    state.isSaving = false;
-  }
 }
 
 // Cancel continuation recording
