@@ -1,6 +1,14 @@
 // DOM Elements
 const notificationBar = document.getElementById('notificationBar');
 const notificationMessage = document.getElementById('notificationMessage');
+const meetingSummaryDialog = document.getElementById('meetingSummaryDialog');
+const meetingDescription = document.getElementById('meetingDescription');
+const meetingParticipants = document.getElementById('meetingParticipants');
+const generateSummaryConfirmBtn = document.getElementById('generateSummaryConfirmBtn');
+const cancelSummaryBtn = document.getElementById('cancelSummaryBtn');
+const meetingSummaryContainer = document.getElementById('meetingSummaryContainer');
+const meetingSummaryContent = document.getElementById('meetingSummaryContent');
+const generateSummaryBtn = document.getElementById('generateSummaryBtn');
 const recordButton = document.getElementById('recordButton');
 const recordingStatus = document.getElementById('recordingStatus');
 const recordingTimer = document.getElementById('recordingTimer');
@@ -84,7 +92,8 @@ const state = {
   },
   autoSave: {
     titleTimer: null,
-    transcriptionTimer: null
+    transcriptionTimer: null,
+    summaryTimer: null
   }
 };
 
@@ -144,7 +153,11 @@ if (typeof module !== 'undefined' && module.exports) {
     moveCalendarToRightPanel,
     renderCalendar,
     handleCalendarDayClick,
-    showDayRecordings
+    showDayRecordings,
+    generateMeetingSummary,
+    saveMeetingSummary,
+    showMeetingSummaryDialog,
+    displayMeetingSummary
   };
 }
 
@@ -213,15 +226,33 @@ function setupEventListeners() {
   confirmDeleteBtn.addEventListener('click', deleteRecording);
   cancelDeleteBtn.addEventListener('click', hideDeleteConfirmation);
   
-  // Save and cancel recording buttons
-  saveButton.addEventListener('click', saveRecording);
-  cancelButton.addEventListener('click', cancelRecording);
-  
   // Continue recording
   document.getElementById('continueRecordingBtn').addEventListener('click', continueRecording);
   
   // Merge transcriptions
   document.getElementById('mergeTranscriptionsBtn').addEventListener('click', mergeTranscriptions);
+  
+  // Meeting summary buttons
+  generateSummaryBtn.addEventListener('click', showMeetingSummaryDialog);
+  cancelSummaryBtn.addEventListener('click', hideMeetingSummaryDialog);
+  generateSummaryConfirmBtn.addEventListener('click', handleGenerateSummary);
+  
+  // Auto-save meeting summary on input and blur
+  meetingSummaryContent.addEventListener('input', () => {
+    // Clear previous timer
+    if (state.autoSave.summaryTimer) {
+      clearTimeout(state.autoSave.summaryTimer);
+    }
+    
+    // Set new timer
+    state.autoSave.summaryTimer = setTimeout(() => {
+      saveMeetingSummary(meetingSummaryContent.innerHTML);
+    }, 500); // 500ms debounce
+  });
+  
+  meetingSummaryContent.addEventListener('blur', () => {
+    saveMeetingSummary(meetingSummaryContent.innerHTML);
+  });
   
   // Add tag
   addTagBtn.addEventListener('click', addTag);
@@ -810,12 +841,14 @@ function renderRecordingsList() {
       <div class="history-item language-${language}" data-id="${recording.id}">
         <div class="history-title-container">
           <h3 class="history-title" data-id="${recording.id}">${recording.title}</h3>
-          <button class="edit-title-btn" data-id="${recording.id}">
-            <i class="fas fa-edit"></i>
-          </button>
-          <button class="quick-delete-btn" data-id="${recording.id}">
-            <i class="fas fa-times"></i>
-          </button>
+          <div class="history-buttons">
+            <button class="edit-title-btn" data-id="${recording.id}">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="quick-delete-btn" data-id="${recording.id}">
+              <i class="fas fa-times"></i>
+            </button>
+          </div>
         </div>
         <div class="history-meta">
           <span>${formattedDate}, ${formattedTime}</span>
@@ -1769,9 +1802,19 @@ async function mergeTranscriptions() {
 }
 
 // Show notification
-function showNotification(message, type = 'success', isSubtle = false) {
+function showNotification(message, type = 'success', durationOrIsSubtle = false) {
   // Set message and type
   notificationMessage.textContent = message;
+  
+  // Determine if the third parameter is a duration or isSubtle flag
+  let isSubtle = false;
+  let customDuration = null;
+  
+  if (typeof durationOrIsSubtle === 'boolean') {
+    isSubtle = durationOrIsSubtle;
+  } else if (typeof durationOrIsSubtle === 'number') {
+    customDuration = durationOrIsSubtle;
+  }
   
   // Apply classes based on type and subtlety
   if (isSubtle) {
@@ -1786,8 +1829,8 @@ function showNotification(message, type = 'success', isSubtle = false) {
     notificationBar.classList.add('show');
   }, 10);
   
-  // Hide notification after delay (shorter for subtle notifications)
-  const displayTime = isSubtle ? 1200 : 2000;
+  // Hide notification after delay (shorter for subtle notifications, or use custom duration)
+  const displayTime = customDuration ? customDuration : (isSubtle ? 1200 : 2000);
   
   setTimeout(() => {
     notificationBar.classList.remove('show');
@@ -2030,3 +2073,189 @@ async function quickDeleteRecording(recordingId) {
 
 // Initialize the app
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Show meeting summary dialog
+function showMeetingSummaryDialog() {
+  if (!state.currentRecordingId) {
+    showNotification('No recording selected', 'error');
+    return;
+  }
+  
+  // Reset form fields
+  meetingDescription.value = '';
+  meetingParticipants.value = '';
+  
+  // Show dialog
+  meetingSummaryDialog.classList.remove('hidden');
+}
+
+// Hide meeting summary dialog
+function hideMeetingSummaryDialog() {
+  meetingSummaryDialog.classList.add('hidden');
+}
+
+// Handle generate summary button click
+async function handleGenerateSummary() {
+  // Get meeting info from dialog
+  const description = meetingDescription.value.trim();
+  const participants = meetingParticipants.value.trim();
+  
+  // Hide dialog
+  hideMeetingSummaryDialog();
+  
+  // Show processing indicator with more visibility
+  showNotification('Generating meeting summary... This may take a moment.', 'info', 5000);
+  
+  // Show processing indicator in the main content area with La Linea GIF
+  const processingDiv = document.createElement('div');
+  processingDiv.id = 'summaryProcessingIndicator';
+  processingDiv.innerHTML = `
+    <div class="la-linea-container">
+      <img src="icons/La Linea Series Animation.gif" alt="La Linea thinking" class="la-linea-gif">
+    </div>
+  `;
+  processingDiv.style.cssText = 'text-align: center; padding: 20px; margin: 20px 0; background: #f8f9fa; border-radius: 5px;';
+  
+  // Add the processing indicator to the page before the summary container
+  meetingSummaryContainer.parentNode.insertBefore(processingDiv, meetingSummaryContainer);
+  
+  try {
+    // Generate summary
+    const summary = await generateMeetingSummary({ description, participants });
+    
+    // Remove processing indicator
+    const indicator = document.getElementById('summaryProcessingIndicator');
+    if (indicator) indicator.remove();
+    
+    // Display and save summary
+    displayMeetingSummary(summary);
+    await saveMeetingSummary(summary);
+    
+    // Ensure the summary container is visible
+    meetingSummaryContainer.classList.remove('hidden');
+    
+    // Scroll to the summary
+    meetingSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+    
+    showNotification('Meeting summary generated successfully', 'success');
+  } catch (error) {
+    console.error('Error generating meeting summary:', error);
+    
+    // Try to get more detailed error information if available
+    let errorMessage = error.message;
+    if (error.response) {
+      try {
+        const errorData = await error.response.json();
+        if (errorData && errorData.error) {
+          errorMessage = errorData.error;
+        }
+      } catch (e) {
+        console.error('Error parsing error response:', e);
+      }
+    }
+    
+    showNotification(`Failed to generate meeting summary: ${errorMessage}`, 'error');
+  }
+}
+
+// Generate meeting summary using OpenAI API
+async function generateMeetingSummary(meetingInfo) {
+  if (!state.currentRecordingId) {
+    throw new Error('No recording selected');
+  }
+  
+  // Get current recording
+  const recording = state.recordings.find(r => r.id === state.currentRecordingId);
+  
+  if (!recording || !recording.transcription) {
+    throw new Error('No transcription available');
+  }
+  
+  // Call API to generate summary
+  const response = await fetch(`${API_URL}/generate-summary`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      transcription: recording.transcription,
+      description: meetingInfo.description,
+      participants: meetingInfo.participants
+    })
+  });
+  
+  if (!response.ok) {
+    let errorMessage = 'Failed to generate meeting summary';
+    try {
+      const errorData = await response.json();
+      if (errorData && errorData.error) {
+        errorMessage = errorData.error;
+      }
+    } catch (e) {
+      console.error('Error parsing error response:', e);
+      errorMessage = `Server error (${response.status}): ${response.statusText}`;
+    }
+    throw new Error(errorMessage);
+  }
+  
+  const data = await response.json();
+  return data.summary;
+}
+
+// Save meeting summary to recording metadata
+async function saveMeetingSummary(summary) {
+  if (!state.currentRecordingId || !summary) {
+    return;
+  }
+  
+  // Get current recording
+  const recording = state.recordings.find(r => r.id === state.currentRecordingId);
+  
+  if (!recording) {
+    return;
+  }
+  
+  // Check if content has changed
+  const hasChanged = recording.meetingSummary !== summary;
+  
+  // Update recording with summary
+  recording.meetingSummary = summary;
+  
+  // Save to server
+  await updateRecordingOnServer(recording);
+  
+  // Only show notification if content has changed
+  if (hasChanged) {
+    showNotification('Summary updated', 'success', true);
+  }
+  
+  return recording;
+}
+
+// Display meeting summary in UI
+function displayMeetingSummary(summary) {
+  if (!summary) {
+    meetingSummaryContainer.classList.add('hidden');
+    return;
+  }
+  
+  // Set summary content
+  meetingSummaryContent.innerHTML = summary;
+  
+  // Show summary container
+  meetingSummaryContainer.classList.remove('hidden');
+}
+
+// Update display transcription function to show meeting summary if available
+const originalDisplayTranscription = displayTranscription;
+displayTranscription = function(recording) {
+  // Call original function
+  originalDisplayTranscription(recording);
+  
+  // Check if recording has a meeting summary
+  if (recording.meetingSummary) {
+    displayMeetingSummary(recording.meetingSummary);
+  } else {
+    meetingSummaryContainer.classList.add('hidden');
+  }
+};

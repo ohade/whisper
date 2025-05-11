@@ -116,7 +116,8 @@ async function processRecording(openai, filePath, language) {
     language,
     audioPath: filePath,
     transcription,
-    tags: [] // Initialize with empty tags array
+    tags: [], // Initialize with empty tags array
+    meetingSummary: null // Initialize with null meeting summary
   };
   
   recordings.push(newRecording);

@@ -51,3 +51,13 @@
 - Decision: Extract recording processing logic into a reusable module (recording-processor.js) that can be used by both the server and command-line tools
 - Rationale: Ensures consistent processing across all entry points and eliminates code duplication
 - Implications: Improved maintainability, easier testing, and consistent behavior across all application components
+
+[2025-05-11 22:06:15] - **Meeting Summary Feature Implementation**
+- Decision: Implement meeting summary generation feature using OpenAI o3 model
+- Rationale: Enhances the application's value by providing automatic meeting summaries from transcriptions
+- Implications: Added API endpoint for summary generation, updated metadata structure, and created UI components for meeting context input and summary display
+
+[2025-05-11 23:27:13] - **Switch from o3 to o4-mini for Meeting Summary Generation**
+- Decision: Replace OpenAI o3 model with o4-mini model for meeting summary generation
+- Rationale: The o3 model was returning empty summaries, causing errors in the application
+- Implications: More reliable summary generation with proper error handling and improved user experience

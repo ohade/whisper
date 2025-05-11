@@ -74,8 +74,8 @@
 }
 
 .filter-chip.language-hebrew.selected {
-    background-color: #e67e22;
-    border-color: #e67e22;
+    background-color: #9c27b0; /* Purple for Hebrew */
+    border-color: #9c27b0;
 }
 
 .filter-chip::before {
@@ -183,12 +183,12 @@
 }
 
 #deselectTagsBtn {
-    background-color: #e67e22;
+    background-color: #9c27b0; /* Purple for Hebrew */
     color: white;
 }
 
 #deselectTagsBtn:hover {
-    background-color: #d35400;
+    background-color: #7B1FA2;
     transform: translateY(-2px);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }

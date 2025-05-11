@@ -17,6 +17,8 @@
 [2025-05-11 14:53:04] - Created process-recording-v2.js that uses the same code path as the main app
 [2025-05-11 15:00:09] - Created process-large-file-v2.js that uses the unified recording processor module
 [2025-05-11 16:43:03] - Fixed audio player missing in Recording History view
+[2025-05-11 22:06:15] - Implemented meeting summary generation feature using OpenAI o3 model
+[2025-05-11 23:27:13] - Fixed issues with meeting summary generation by switching to o4-mini model and adding La Linea Series animation for loading
 
 ## Current Tasks
 [2025-05-08 21:36:23] - Implemented moving calendar to the right panel with three-column layout

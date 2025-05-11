@@ -165,6 +165,84 @@ app.put('/api/recording/:id', (req, res) => {
   }
 });
 
+// Generate meeting summary
+app.post('/api/generate-summary', async (req, res) => {
+  try {
+    console.log('Received request to generate summary');
+    const { transcription, description, participants } = req.body;
+    
+    console.log('Request data:', { 
+      transcriptionLength: transcription ? transcription.length : 0,
+      hasDescription: !!description,
+      hasParticipants: !!participants
+    });
+    
+    if (!transcription) {
+      console.log('No transcription provided in request');
+      return res.status(400).json({ error: 'No transcription provided' });
+    }
+    
+    // Create prompt for GPT-4o
+    const prompt = `I need you to create a bullet summary & action items of the below text. This text is a transcription of a meeting I recorded.\n\n${description ? `Meeting Description: ${description}\n` : ''}${participants ? `Participants: ${participants}\n` : ''}\n\nTranscription:\n${transcription}`;
+    
+    console.log('Prompt length:', prompt.length);
+    console.log('Using model: o4-mini');
+    
+    // Call OpenAI API
+    try {
+      console.log('Making API call to OpenAI...');
+      const summaryResponse = await openai.chat.completions.create({
+        model: "o4-mini",
+        messages: [
+          {
+            role: "system",
+            content: "You are a helpful assistant that creates concise, well-structured meeting summaries. Format your response with markdown, including sections for 'Meeting Summary' (key points) and 'Action Items' (specific tasks with owners if mentioned)."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ]
+      });
+      
+      console.log('API call successful. Response structure:', {
+        hasChoices: !!summaryResponse.choices,
+        choicesLength: summaryResponse.choices ? summaryResponse.choices.length : 0,
+        hasFirstChoice: summaryResponse.choices && summaryResponse.choices.length > 0,
+        hasMessage: summaryResponse.choices && summaryResponse.choices.length > 0 && !!summaryResponse.choices[0].message,
+        hasContent: summaryResponse.choices && summaryResponse.choices.length > 0 && 
+                  summaryResponse.choices[0].message && !!summaryResponse.choices[0].message.content
+      });
+      
+      if (!summaryResponse.choices || summaryResponse.choices.length === 0) {
+        throw new Error('No choices returned from OpenAI API');
+      }
+      
+      const summary = summaryResponse.choices[0].message.content;
+      console.log('Summary generated. Length:', summary ? summary.length : 0);
+      console.log('Summary preview:', summary ? summary.substring(0, 100) + '...' : 'EMPTY');
+      
+      if (!summary || summary.trim() === '') {
+        throw new Error('Empty summary returned from OpenAI API');
+      }
+      
+      res.json({ summary });
+    } catch (apiError) {
+      console.error('Error in OpenAI API call:', apiError);
+      throw apiError; // Re-throw to be caught by the outer try/catch
+    }
+  } catch (error) {
+    console.error('Error generating meeting summary:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+      requestBody: req.body
+    });
+    res.status(500).json({ error: `Failed to generate meeting summary: ${error.message}` });
+  }
+});
+
 // Delete recording
 app.delete('/api/recording/:id', (req, res) => {
   try {

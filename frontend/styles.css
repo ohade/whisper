@@ -6,17 +6,18 @@
     transform: translateX(-50%);
     padding: 10px 20px;
     border-radius: 5px;
-    background-color: #28a745;
+    background-color: rgba(40, 167, 69, 0.85);
     color: white;
     z-index: 1000;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
     opacity: 0;
     transform: translateX(-50%) translateY(-20px);
+    font-weight: 500;
 }
 
 .notification-bar.show {
-    opacity: 1;
+    opacity: 0.8;
     transform: translateX(-50%) translateY(0);
 }
 
@@ -34,12 +35,13 @@
 
 /* Subtle notification for auto-save */
 .notification-bar.subtle {
-    background-color: rgba(40, 167, 69, 0.6);
+    background-color: rgba(40, 167, 69, 0.75);
     color: white;
     padding: 6px 15px;
     font-size: 0.9em;
     box-shadow: 0 1px 5px rgba(0, 0, 0, 0.1);
     opacity: 0.85;
+    font-weight: 500;
 }
 
 .notification-bar.hidden {
@@ -160,7 +162,7 @@ body {
 }
 
 .history-item.language-hebrew {
-    border-left: 4px solid #e67e22; /* Orange for Hebrew */
+    border-left: 4px solid #9c27b0; /* Purple for Hebrew */
 }
 
 .language-indicator {
@@ -178,7 +180,7 @@ body {
 }
 
 .language-indicator.hebrew {
-    background-color: #e67e22; /* Orange for Hebrew */
+    background-color: #9c27b0; /* Purple for Hebrew */
 }
 
 .history-item:hover {
@@ -190,8 +192,9 @@ body {
 .history-title-container {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 5px;
     margin-bottom: 5px;
+    position: relative;
 }
 
 .history-title {
@@ -218,10 +221,47 @@ body {
     align-items: center;
     justify-content: center;
     transition: var(--transition);
+    position: relative;
 }
 
 .edit-title-btn:hover {
     color: var(--primary-color);
+}
+
+.history-buttons {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: auto;
+}
+
+.quick-delete-btn {
+    background: none;
+    border: none;
+    color: var(--danger-color);
+    cursor: pointer;
+    padding: 6px;
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition);
+    opacity: 0;
+    visibility: hidden;
+    width: 30px;
+    height: 30px;
+}
+
+.history-item:hover .quick-delete-btn {
+    opacity: 1;
+    visibility: visible;
+}
+
+.quick-delete-btn:hover {
+    background-color: rgba(220, 53, 69, 0.1);
+    transform: scale(1.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .save-title-btn {
@@ -456,6 +496,35 @@ body {
     border-radius: var(--border-radius);
 }
 
+.processing-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 15px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.la-linea-container {
+  margin: 0 auto 15px;
+  max-width: 300px;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.la-linea-gif {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
 .spinner {
     width: 30px;
     height: 30px;
@@ -570,56 +639,138 @@ body {
 
 .transcription-actions {
     display: flex;
-    gap: 15px;
+    gap: 30px;
     margin-top: 20px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    justify-content: center;
 }
 
-.back-btn, .continue-btn, .merge-btn, .delete-btn {
-    padding: 10px 20px;
-    color: white;
-    border: none;
-    border-radius: var(--border-radius);
+.transcription-actions {
+    display: flex;
+    gap: 30px;
+    margin-top: 20px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    position: relative; /* Important for absolute positioning of children */
+}
+
+.back-btn, .continue-btn, .merge-btn, .delete-btn, .summary-btn {
+    width: 64px;
+    height: 64px;
+    padding: 0;
+    color: var(--dark-color);
+    background-color: white;
+    border: 1px solid #e1e4e8;
+    border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: center;
     transition: var(--transition);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: relative;
+    margin-bottom: 40px; /* Add more space below buttons for labels */
+}
+
+/* Base icon styling */
+.back-btn i, .continue-btn i, .merge-btn i, .summary-btn i, .delete-btn i {
+    font-size: 1.8rem;
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    transition: var(--transition);
+}
+
+/* Back button gradient - blue to purple */
+.back-btn i {
+    background-image: linear-gradient(135deg, #4a6fa5, #9b59b6);
+}
+
+/* Continue recording gradient - blue to teal */
+.continue-btn i {
+    background-image: linear-gradient(135deg, #3498db, #1abc9c);
+}
+
+/* Summary button gradient - teal to green */
+.summary-btn i {
+    background-image: linear-gradient(135deg, #00bcd4, #2ecc71);
+}
+
+/* Merge button gradient - purple to pink */
+.merge-btn i {
+    background-image: linear-gradient(135deg, #9b59b6, #e84393);
+}
+
+/* Delete button gradient - orange to red */
+.delete-btn i {
+    background-image: linear-gradient(135deg, #e67e22, #e74c3c);
+}
+
+.button-icon {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    display: block;
+    filter: saturate(300%) brightness(0.7) contrast(150%); /* Make colors darker and more intense */
+    opacity: 1; /* Full opacity */
+}
+
+.back-btn:hover, .continue-btn:hover, .merge-btn:hover, .summary-btn:hover, .delete-btn:hover {
+    background-color: #f8f8f8;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Button label text styling - completely new approach */
+.button-label {
+    position: absolute;
+    bottom: -35px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #2c3e50;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 4px;
+    font-size: 14px;
     font-weight: 600;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    z-index: 100;
 }
 
-.back-btn {
-    background-color: var(--gray-color);
+/* Arrow for tooltip */
+.button-label::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent #2c3e50 transparent;
 }
 
-.back-btn:hover {
-    background-color: #5a6268;
+/* Show label on hover with a delay */
+.back-btn:hover .button-label,
+.continue-btn:hover .button-label,
+.merge-btn:hover .button-label,
+.summary-btn:hover .button-label,
+.delete-btn:hover .button-label {
+    opacity: 1;
+    visibility: visible;
+    bottom: -45px; /* Move down slightly on hover */
 }
 
-.continue-btn {
-    background-color: var(--primary-color);
-}
 
-.continue-btn:hover {
-    background-color: #3a5a84;
-}
 
-.merge-btn {
-    background-color: var(--secondary-color);
-}
 
-.merge-btn:hover {
-    background-color: #5a7b9d;
-}
 
-.delete-btn {
-    background-color: var(--danger-color);
-    margin-left: auto;
-}
 
-.delete-btn:hover {
-    background-color: #c82333;
-}
+
+
 
 /* Auto-save indicator */
 .auto-save-indicator {
@@ -892,7 +1043,7 @@ body {
 .tag {
     display: inline-flex;
     align-items: center;
-    background-color: var(--primary-color);
+    background-color: var(--tag-color, var(--primary-color));
     color: white;
     padding: 5px 10px;
     border-radius: 15px;
@@ -910,6 +1061,34 @@ body {
     border-radius: 50%;
     background-color: rgba(255, 255, 255, 0.3);
     transition: var(--transition);
+}
+
+/* Hide X button in history items until hover */
+.history-item .tag-remove {
+    opacity: 0;
+    visibility: hidden;
+    color: transparent;
+    background: transparent;
+    border: none;
+    transition: all 0.2s ease;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    pointer-events: none;
+}
+
+.history-item:hover .tag-remove {
+    opacity: 1;
+    visibility: visible;
+    color: var(--danger-color);
+    pointer-events: auto;
 }
 
 .tag-remove:hover {
@@ -1095,6 +1274,139 @@ body {
 .day-recording-item h4 {
     margin: 0 0 5px 0;
     font-size: 0.9rem;
+}
+
+/* Meeting Summary Styles */
+.meeting-summary-container {
+    margin: 20px 0;
+    background-color: var(--light-color);
+    border-radius: var(--border-radius);
+    padding: 20px;
+    border-left: 4px solid #17a2b8; /* Info color */
+}
+
+.meeting-summary-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e1e4e8;
+}
+
+.meeting-summary-header h3 {
+    margin: 0;
+    color: #17a2b8; /* Info color */
+}
+
+.edit-summary-btn {
+    background: none;
+    border: none;
+    color: var(--gray-color);
+    cursor: pointer;
+    padding: 5px;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+
+.edit-summary-btn:hover {
+    color: #17a2b8; /* Info color */
+}
+
+.meeting-summary-content {
+    min-height: 100px;
+    padding: 15px;
+    background-color: white;
+    border-radius: var(--border-radius);
+    border: 1px solid #e1e4e8;
+    margin-bottom: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.meeting-summary-content:focus {
+    outline: 2px solid #17a2b8; /* Info color */
+    border-color: transparent;
+}
+
+.summary-auto-save {
+    font-size: 0.8rem;
+    color: var(--gray-color);
+    text-align: right;
+}
+
+/* Dialog Overlay for Meeting Summary */
+.dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.dialog-overlay.hidden {
+    display: none;
+    opacity: 0;
+}
+
+.dialog-content {
+    background-color: white;
+    border-radius: var(--border-radius);
+    padding: 25px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    animation: pop-in 0.3s ease-out;
+}
+
+.dialog-content h3 {
+    margin-top: 0;
+    color: #17a2b8; /* Info color */
+    margin-bottom: 15px;
+}
+
+.dialog-form {
+    margin: 20px 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #e1e4e8;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+}
+
+.form-group input:focus {
+    outline: 2px solid #17a2b8; /* Info color */
+    border-color: transparent;
+}
+
+.dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 15px;
+    margin-top: 20px;
 }
 
 /* Confirmation Dialog Styles */

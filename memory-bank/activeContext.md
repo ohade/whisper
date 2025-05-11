@@ -15,6 +15,8 @@
 [2025-05-11 14:53:04] - Refactored application to extract recording processing logic into a reusable module and created process-recording-v2.js that uses the same code path as the main app.
 [2025-05-11 15:00:09] - Created process-large-file-v2.js that also uses the unified recording processor module, ensuring consistent behavior across all entry points.
 [2025-05-11 16:43:03] - Fixed audio player missing in Recording History view by properly setting the audio URL in the displayTranscription function.
+[2025-05-11 22:06:15] - Implemented meeting summary generation feature using OpenAI o3 model, including dialog for meeting context, editable summary display with autosave, and proper metadata storage.
+[2025-05-11 23:27:13] - Fixed issues with meeting summary generation feature by switching from o3 to o4-mini model, adding detailed error logging, and implementing a La Linea Series animation for the loading indicator.
 
 ## Current Objectives
 - Set up project structure ✓
@@ -28,6 +30,7 @@
 - Run all tests to ensure system integrity ✓
 - Fix any remaining bugs identified through testing ✓
 - Implement robust file validation to handle corrupted audio files ✓
+- Implement meeting summary generation feature using OpenAI o3 model ✓
 
 ## Open Questions/Issues
 - OpenAI API key management approach
