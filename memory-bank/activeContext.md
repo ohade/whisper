@@ -14,6 +14,7 @@
 [2025-05-11 14:40:44] - Updated title generation to use GPT-4o model and created a process-recording.js script to manually process recordings through the full flow.
 [2025-05-11 14:53:04] - Refactored application to extract recording processing logic into a reusable module and created process-recording-v2.js that uses the same code path as the main app.
 [2025-05-11 15:00:09] - Created process-large-file-v2.js that also uses the unified recording processor module, ensuring consistent behavior across all entry points.
+[2025-05-11 16:43:03] - Fixed audio player missing in Recording History view by properly setting the audio URL in the displayTranscription function.
 
 ## Current Objectives
 - Set up project structure ✓

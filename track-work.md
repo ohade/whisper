@@ -1,6 +1,9 @@
 # Voice Recorder and Transcriber - Work Tracking
 
 ## Bug Fixes Implemented
+- [x] Fixed audio player missing in Recording History view. Created: 2025-05-11. Completed: 2025-05-11 16:43:03
+  - [x] Fixed displayTranscription function to properly set audio URL. Created: 2025-05-11. Completed: 2025-05-11 16:43:03
+  - [x] Ensured audio player is always visible when viewing recording details. Created: 2025-05-11. Completed: 2025-05-11 16:43:03
 - [x] Fixed continue recording functionality not starting recording when clicked. Created: 2025-05-08. Completed: 2025-05-08 22:54:29
 - [x] Fix day summary popup being cut off in the calendar view. Created: 2025-05-08. Completed: 2025-05-08 23:02:56
   - [x] Fixed calendar width to ensure all dates are visible. Created: 2025-05-08. Completed: 2025-05-08 23:02:56

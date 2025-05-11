@@ -16,6 +16,7 @@
 [2025-05-11 14:53:04] - Refactored application to extract recording processing logic into a reusable module
 [2025-05-11 14:53:04] - Created process-recording-v2.js that uses the same code path as the main app
 [2025-05-11 15:00:09] - Created process-large-file-v2.js that uses the unified recording processor module
+[2025-05-11 16:43:03] - Fixed audio player missing in Recording History view
 
 ## Current Tasks
 [2025-05-08 21:36:23] - Implemented moving calendar to the right panel with three-column layout
