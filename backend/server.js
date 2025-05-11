@@ -4,8 +4,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { OpenAI } = require('openai');
-const { transcribeWithWhisper } = require('./utils/whisper-transcription');
-const { validateAudioFile } = require('./utils/webm-validator');
+const { processRecording, getRecordingsMetadata, saveRecordingMetadata } = require('./utils/recording-processor');
 require('dotenv').config();
 
 const app = express();
@@ -47,18 +46,7 @@ if (!fs.existsSync(recordingsDir)) {
   fs.mkdirSync(recordingsDir, { recursive: true });
 }
 
-const getRecordingsMetadata = () => {
-  const metadataPath = path.join(recordingsDir, 'metadata.json');
-  if (fs.existsSync(metadataPath)) {
-    return JSON.parse(fs.readFileSync(metadataPath, 'utf8'));
-  }
-  return [];
-};
-
-const saveRecordingMetadata = (metadata) => {
-  const metadataPath = path.join(recordingsDir, 'metadata.json');
-  fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
-};
+// Helper functions for recordings metadata are now imported from recording-processor module
 
 // Routes
 app.get('/api/recordings', (req, res) => {
@@ -80,78 +68,27 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'No audio file uploaded' });
     }
 
-    console.log(`Processing file: ${file.path}`);
-    console.log(`File size: ${file.size} bytes`);
-    console.log(`Language: ${language}`);
-
-    // Create temp directory for split files if it doesn't exist
-    const tempDir = path.join(path.dirname(file.path), 'temp_splits');
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    }
-    
-    // Validate the audio file before processing
-    console.log('Validating audio file...');
-    const validationResult = await validateAudioFile(file.path);
-    
-    if (!validationResult.isValid) {
-      console.error('Audio file validation failed:', validationResult.details);
-      return res.status(400).json({ 
-        error: 'Invalid audio file', 
-        details: validationResult.details,
-        message: 'The uploaded audio file appears to be corrupted or in an unsupported format. Please try recording again.'
-      });
-    }
-    
-    console.log('Audio file validation successful:', validationResult.details);
-
-    // Start transcription with Whisper, using the improved transcription service that handles large files
-    let transcription;
     try {
-      // Use the new whisper transcription service that can handle large files
-      console.log('Using improved transcription service to handle potential large file...');
-      transcription = await transcribeWithWhisper(openai, file.path, language, true);
-      console.log('Transcription successful');
-    } catch (whisperError) {
-      console.error('Whisper API error:', whisperError);
-      return res.status(500).json({ error: 'Failed to process audio', details: whisperError.message });
+      // Use the extracted recording processor module to handle the entire flow
+      const newRecording = await processRecording(openai, file.path, language);
+      res.json(newRecording);
+    } catch (processingError) {
+      console.error('Processing error:', processingError);
+      
+      // Return appropriate error response based on error type
+      if (processingError.message && processingError.message.includes('Invalid audio file')) {
+        return res.status(400).json({ 
+          error: 'Invalid audio file', 
+          details: processingError.message,
+          message: 'The uploaded audio file appears to be corrupted or in an unsupported format. Please try recording again.'
+        });
+      } else {
+        return res.status(500).json({ 
+          error: 'Failed to process audio', 
+          details: processingError.message 
+        });
+      }
     }
-
-    // Generate title using GPT-4o
-    const titleResponse = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: `Generate a short, concise title (3-5 words) that captures the essence of the following ${language} text. Return only the title, nothing else.`
-        },
-        {
-          role: "user",
-          content: transcription
-        }
-      ],
-      max_tokens: 20
-    });
-
-    const title = titleResponse.choices[0].message.content.trim();
-    const timestamp = new Date().toISOString();
-    
-    // Save metadata
-    const recordings = getRecordingsMetadata();
-    const newRecording = {
-      id: Date.now().toString(),
-      title,
-      timestamp,
-      language,
-      audioPath: file.path,
-      transcription,
-      tags: [] // Initialize with empty tags array
-    };
-    
-    recordings.push(newRecording);
-    saveRecordingMetadata(recordings);
-    
-    res.json(newRecording);
   } catch (error) {
     console.error('Error processing audio:', error);
     res.status(500).json({ error: 'Failed to process audio' });

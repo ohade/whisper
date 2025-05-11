@@ -13,6 +13,9 @@
 [2025-05-11 14:22:14] - Implemented WebM file validation to detect and handle corrupted audio files
 [2025-05-11 14:40:44] - Updated title generation to use GPT-4o model for better quality titles
 [2025-05-11 14:40:44] - Created process-recording.js script for manual processing of recordings
+[2025-05-11 14:53:04] - Refactored application to extract recording processing logic into a reusable module
+[2025-05-11 14:53:04] - Created process-recording-v2.js that uses the same code path as the main app
+[2025-05-11 15:00:09] - Created process-large-file-v2.js that uses the unified recording processor module
 
 ## Current Tasks
 [2025-05-08 21:36:23] - Implemented moving calendar to the right panel with three-column layout

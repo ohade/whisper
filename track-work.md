@@ -36,6 +36,13 @@
   - [x] Include validation, transcription, title generation, and metadata update. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
   - [x] Test script with a large recording file. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
 
+- [x] Refactor recording processing logic for code reuse. Created: 2025-05-11. Completed: 2025-05-11 15:00:09
+  - [x] Extract recording processing logic into a reusable module. Created: 2025-05-11. Completed: 2025-05-11 14:53:04
+  - [x] Update server.js to use the new recording-processor module. Created: 2025-05-11. Completed: 2025-05-11 14:53:04
+  - [x] Create process-recording-v2.js that uses the same code path as the main app. Created: 2025-05-11. Completed: 2025-05-11 14:53:04
+  - [x] Create process-large-file-v2.js that uses the same code path as the main app. Created: 2025-05-11. Completed: 2025-05-11 15:00:09
+  - [x] Test the refactored implementations with a large recording file. Created: 2025-05-11. Completed: 2025-05-11 15:00:09
+
 - [x] Continue recording system needs improvements. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
   - [x] Add language selection (Hebrew/English) when continuing recording. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
   - [x] Fix issue where continuing recording creates a new record instead of appending to the current one. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41

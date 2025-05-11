@@ -46,3 +46,8 @@
 - Decision: Create a standalone process-recording.js script that replicates the server's full recording processing flow
 - Rationale: Enables manual processing of recordings outside the normal app flow, useful for recovery and batch processing
 - Implications: Improved system resilience and administrative capabilities for handling edge cases
+
+[2025-05-11 14:53:04] - **Refactor Recording Processing Logic**
+- Decision: Extract recording processing logic into a reusable module (recording-processor.js) that can be used by both the server and command-line tools
+- Rationale: Ensures consistent processing across all entry points and eliminates code duplication
+- Implications: Improved maintainability, easier testing, and consistent behavior across all application components
