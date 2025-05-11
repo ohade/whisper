@@ -4,6 +4,8 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const { OpenAI } = require('openai');
+const { transcribeWithWhisper } = require('./utils/whisper-transcription');
+const { validateAudioFile } = require('./utils/webm-validator');
 require('dotenv').config();
 
 const app = express();
@@ -25,7 +27,10 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const timestamp = Date.now();
-    cb(null, `recording-${timestamp}.webm`);
+    // Get the file extension from the original file or default to webm
+    const originalExt = path.extname(file.originalname).toLowerCase();
+    const extension = ['.webm', '.opus', '.mp3', '.wav', '.ogg'].includes(originalExt) ? originalExt : '.webm';
+    cb(null, `recording-${timestamp}${extension}`);
   }
 });
 
@@ -75,17 +80,46 @@ app.post('/api/upload', upload.single('audio'), async (req, res) => {
       return res.status(400).json({ error: 'No audio file uploaded' });
     }
 
-    // Start transcription with Whisper
-    const transcription = await openai.audio.transcriptions.create({
-      file: fs.createReadStream(file.path),
-      model: "whisper-1",
-      language: language === 'hebrew' ? 'he' : 'en',
-      response_format: 'text'
-    });
+    console.log(`Processing file: ${file.path}`);
+    console.log(`File size: ${file.size} bytes`);
+    console.log(`Language: ${language}`);
 
-    // Generate title using GPT
+    // Create temp directory for split files if it doesn't exist
+    const tempDir = path.join(path.dirname(file.path), 'temp_splits');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    
+    // Validate the audio file before processing
+    console.log('Validating audio file...');
+    const validationResult = await validateAudioFile(file.path);
+    
+    if (!validationResult.isValid) {
+      console.error('Audio file validation failed:', validationResult.details);
+      return res.status(400).json({ 
+        error: 'Invalid audio file', 
+        details: validationResult.details,
+        message: 'The uploaded audio file appears to be corrupted or in an unsupported format. Please try recording again.'
+      });
+    }
+    
+    console.log('Audio file validation successful:', validationResult.details);
+
+    // Start transcription with Whisper, using the improved transcription service that handles large files
+    let transcription;
+    try {
+      // Use the new whisper transcription service that can handle large files
+      console.log('Using improved transcription service to handle potential large file...');
+      transcription = await transcribeWithWhisper(openai, file.path, language, true);
+      console.log('Transcription successful');
+    } catch (whisperError) {
+      console.error('Whisper API error:', whisperError);
+      return res.status(500).json({ error: 'Failed to process audio', details: whisperError.message });
+    }
+
+    // Generate title using GPT-4o
     const titleResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
+      model: "gpt-4o",
       messages: [
         {
           role: "system",

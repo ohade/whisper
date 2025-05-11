@@ -10,6 +10,9 @@
 [2025-05-08 20:00:08] - Added responsive design and accessibility features
 [2025-05-08 20:00:08] - Implemented error handling and loading states
 [2025-05-08 20:00:08] - Created comprehensive test suite for backend functionality
+[2025-05-11 14:22:14] - Implemented WebM file validation to detect and handle corrupted audio files
+[2025-05-11 14:40:44] - Updated title generation to use GPT-4o model for better quality titles
+[2025-05-11 14:40:44] - Created process-recording.js script for manual processing of recordings
 
 ## Current Tasks
 [2025-05-08 21:36:23] - Implemented moving calendar to the right panel with three-column layout
@@ -22,6 +25,7 @@
 [2025-05-08 22:57:42] - Added detailed subtasks for recording functionality issues including audio processing, memory leaks, and test requirements
 [2025-05-08 23:02:56] - Fixed calendar issues: ensured all dates are visible and fixed popup menu appearance when clicking on dates with records
 [2025-05-08 23:42:41] - Improved continue recording system with language selection and fixed issue where it creates new records instead of appending
+[2025-05-11 14:22:14] - Created WebM file validator module to detect corrupted audio files before processing
 
 Completed tasks from track-work.md:
 - Implemented mocking approach to avoid microphone permission issues
@@ -31,6 +35,9 @@ Completed tasks from track-work.md:
 - Implemented continue recording functionality with smooth animations
 - Added auto-scrolling to focus on new recording section
 - Implemented merge transcriptions functionality to combine multiple recordings
+- Created robust WebM file validation to detect corrupted files
+- Integrated validation at multiple levels in the application
+- Added clear error messages for users when files are corrupted
 
 ## Next Tasks
 - Add more language options if needed
@@ -41,6 +48,7 @@ Completed tasks from track-work.md:
 ## Issues/Blockers
 - OpenAI API key needs to be provided by the user before the application can function
 - Audio recording may have different behaviors across browsers
+- WebM files may occasionally be corrupted during recording, requiring validation
 
 ## Notes
 [2025-05-08 19:55:04] - Project initialization
@@ -48,3 +56,4 @@ Completed tasks from track-work.md:
 [2025-05-08 22:19:15] - E2E testing implementation with Playwright completed, using mocking approach for better test reliability
 [2025-05-08 22:20:45] - Fixed Playwright test issues with sidebar recording detection and calendar red dot visibility
 [2025-05-08 22:23:15] - Enhanced Playwright tests to detect and fix UI issues with Hebrew text display in calendar popup menu
+[2025-05-11 14:22:14] - Implemented WebM file validation to detect corrupted files and provide clear error messages to users

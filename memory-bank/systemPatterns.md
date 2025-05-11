@@ -42,3 +42,9 @@
 [2025-05-08 19:55:04] - **Backend**
 - Structured error responses
 - Logging for debugging
+
+[2025-05-11 14:22:14] - **File Validation**
+- Multi-level validation approach (API, transcription service, file handler)
+- Early detection of corrupted files
+- Clear error messages with specific details
+- Fail-fast approach to prevent wasted processing

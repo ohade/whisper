@@ -17,6 +17,25 @@
   - [ ] Write unit tests for recording functionality fixes. Created: 2025-05-08
   - [ ] Write integration tests for recording session stability. Created: 2025-05-08
 
+- [x] Implement large file handling for OpenAI Whisper API. Created: 2025-05-11. Completed: 2025-05-11 12:35:00
+  - [x] Create audio splitting functionality at quiet points. Created: 2025-05-11. Completed: 2025-05-11 12:35:00
+  - [x] Implement transcription service to handle files over 25MB. Created: 2025-05-11. Completed: 2025-05-11 12:35:00
+  - [x] Combine transcriptions from multiple audio chunks. Created: 2025-05-11. Completed: 2025-05-11 12:35:00
+  - [ ] Write unit tests for audio splitting functionality. Created: 2025-05-11
+  - [ ] Write integration tests for large file transcription. Created: 2025-05-11
+
+- [x] Fix large file handling integration in the system workflow. Created: 2025-05-11. Completed: 2025-05-11 14:10:00
+  - [x] Identify issues with current large file handling implementation. Created: 2025-05-11. Completed: 2025-05-11 12:57:40
+  - [x] Update whisper-transcription.js to incorporate successful standalone script approach. Created: 2025-05-11. Completed: 2025-05-11 12:57:40
+  - [x] Test large file transcription with updated implementation. Created: 2025-05-11. Completed: 2025-05-11 13:15:30
+  - [x] Write unit tests for the updated transcription service. Created: 2025-05-11. Completed: 2025-05-11 13:58:16
+  - [x] Write integration tests for large file handling workflow. Created: 2025-05-11. Completed: 2025-05-11 14:10:00
+
+- [x] Create manual processing script for recordings. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
+  - [x] Implement process-recording.js script that replicates the server flow. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
+  - [x] Include validation, transcription, title generation, and metadata update. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
+  - [x] Test script with a large recording file. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
+
 - [x] Continue recording system needs improvements. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
   - [x] Add language selection (Hebrew/English) when continuing recording. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
   - [x] Fix issue where continuing recording creates a new record instead of appending to the current one. Created: 2025-05-08 23:37:43. Completed: 2025-05-08 23:42:41
@@ -103,6 +122,7 @@
 - [x] Set up OpenAI API client. Created: 2025-05-08. Completed: 2025-05-08
 - [x] Implement Whisper API integration for transcription. Created: 2025-05-08. Completed: 2025-05-08
 - [x] Add GPT API integration for title generation. Created: 2025-05-08. Completed: 2025-05-08
+- [x] Upgrade title generation to use GPT-4o model for better quality titles. Created: 2025-05-11. Completed: 2025-05-11 14:40:44
 - [x] Create processing indicator with timer. Created: 2025-05-08. Completed: 2025-05-08
 - [x] Implement error handling for API calls. Created: 2025-05-08. Completed: 2025-05-08
 - [ ] Write unit tests for API integrations. Created: 2025-05-08
@@ -140,6 +160,55 @@
   - [x] Test popup menu closes when clicking day without recording. Created: 2025-05-08. Completed: 2025-05-08
 
 ## Work Log
+
+### Large File Handling Integration Fix - 2025-05-11
+**Accomplishments:**
+- Identified the root cause of large file handling issues in the transcription workflow
+- Updated whisper-transcription.js to incorporate the successful approach from the standalone script
+- Added MP3 conversion step to reduce file size before attempting to split
+- Improved logging and error handling throughout the process
+- Added transcription file saving for debugging purposes
+
+**Challenges:**
+- Different approaches between standalone script and integrated system
+- Inconsistent implementation across multiple utility files
+- Missing audio conversion step in the integrated workflow
+- Lack of proper debugging information when transcription fails
+
+**Implemented Solutions:**
+- Added ffmpeg-based audio conversion to reduce file size before splitting
+- Integrated the successful approach from the standalone script
+- Added comprehensive logging throughout the process
+- Implemented transcription file saving for better debugging
+- Ensured proper cleanup of temporary files
+
+**In Progress: 2025-05-11 12:57:40**
+
+### Large File Handling Implementation - 2025-05-11
+**Accomplishments:**
+- Implemented audio splitting functionality for files exceeding OpenAI's 25MB limit
+- Created a system that detects quiet points in audio for optimal splitting
+- Implemented audio format conversion to reduce file size before splitting
+- Developed a standalone script for processing large audio files directly
+- Added proper error handling and logging throughout the process
+- Successfully transcribed a large audio file (33.58 MB) by splitting it into smaller chunks
+
+**Challenges:**
+- OpenAI's Whisper API has a strict 25MB file size limit
+- Finding optimal split points in audio to avoid cutting words
+- Handling various audio formats and ensuring consistent quality across splits
+- Managing temporary files and cleanup after processing
+- Ensuring transcriptions from multiple chunks are properly combined
+
+**Implemented Solutions:**
+- Used ffmpeg to analyze audio for silence detection and optimal split points
+- Implemented audio conversion to more efficient formats to reduce file size
+- Created a fallback mechanism for time-based splitting when silence detection fails
+- Developed a standalone script for direct processing of large files
+- Implemented proper cleanup of temporary files after processing
+- Added detailed logging to track the processing steps and file sizes
+
+**Completed: 2025-05-11 12:35:00**
 
 ### Save Button Fix - 2025-05-09
 **Accomplishments:**

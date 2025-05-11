@@ -31,3 +31,18 @@
 - Decision: Implement a three-column layout with the calendar moved to a dedicated right panel
 - Rationale: Improves UI organization, provides better visual separation between components, and makes better use of screen space on larger displays
 - Implications: Required responsive design adjustments for smaller screens, ensuring the calendar remains usable on mobile devices
+
+[2025-05-11 14:22:14] - **WebM File Validation Implementation**
+- Decision: Implement a comprehensive WebM file validation system at multiple levels in the application
+- Rationale: Detected issues with corrupted WebM files causing processing failures; validation prevents wasted processing time and provides clear user feedback
+- Implications: Added validation checks in server.js, whisper-transcription.js, and large-file-handler.js; created dedicated webm-validator.js module
+
+[2025-05-11 14:40:44] - **Upgrade to GPT-4o for Title Generation**
+- Decision: Replace GPT-3.5-turbo with GPT-4o for generating recording titles
+- Rationale: GPT-4o provides higher quality, more relevant titles while maintaining the same API interface
+- Implications: Slight increase in API costs but improved user experience with better title quality
+
+[2025-05-11 14:40:44] - **Manual Recording Processing Script**
+- Decision: Create a standalone process-recording.js script that replicates the server's full recording processing flow
+- Rationale: Enables manual processing of recordings outside the normal app flow, useful for recovery and batch processing
+- Implications: Improved system resilience and administrative capabilities for handling edge cases

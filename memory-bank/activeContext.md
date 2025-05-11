@@ -10,6 +10,8 @@
 [2025-05-08 23:02:56] - Fixed calendar issues by ensuring all dates are visible and fixing popup menu appearance when clicking on dates with records.
 [2025-05-08 23:37:43] - Improving the continue recording system to add language selection and fix the issue where it creates new records instead of appending.
 [2025-05-08 23:47:17] - Refactoring the continue recording component to work more consistently with the original recording component.
+[2025-05-11 14:22:14] - Implemented WebM file validation to detect and handle corrupted audio files before processing.
+[2025-05-11 14:40:44] - Updated title generation to use GPT-4o model and created a process-recording.js script to manually process recordings through the full flow.
 
 ## Current Objectives
 - Set up project structure ✓
@@ -20,13 +22,15 @@
 - Implement history panel with generated titles ✓
 - Create a clean, intuitive UI ✓
 - Implement comprehensive E2E testing ✓
-- Run all tests to ensure system integrity
-- Fix any remaining bugs identified through testing
+- Run all tests to ensure system integrity ✓
+- Fix any remaining bugs identified through testing ✓
+- Implement robust file validation to handle corrupted audio files ✓
 
 ## Open Questions/Issues
 - OpenAI API key management approach
 - Best format for storing audio recordings locally
 - Approach for error handling during API calls
+- Monitoring for WebM file corruption issues to identify patterns
 
 ## Recent Decisions
 [2025-05-08 19:55:04] - Decision to use HTML/CSS/JS with Node.js backend for the application
