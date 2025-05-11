@@ -992,13 +992,10 @@ function displayTranscription(recording) {
     // Set transcription text
     transcriptionText.textContent = recording.transcription || '';
     
-    // Set audio source if available
-    if (recording.audioUrl) {
-      audioPlayer.src = recording.audioUrl;
-      audioPlayer.classList.remove('hidden');
-    } else {
-      audioPlayer.classList.add('hidden');
-    }
+    // Set audio source using the recording ID
+    // The server provides a dedicated endpoint for streaming audio
+    audioPlayer.src = `${API_URL}/audio/${recording.id}`;
+    audioPlayer.classList.remove('hidden');
     
     // Render tags
     renderTags(recording.tags || []);
